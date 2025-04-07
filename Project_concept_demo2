@@ -1,0 +1,36 @@
+//a method to visulize logged data in csv
+//to show a memory map
+//in python
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the CSV
+df = pd.read_csv("layout.csv")
+
+# Convert hex addresses to integers for sorting
+df["AddressInt"] = df["Address"].apply(lambda x: int(x, 16))
+
+# Sort by memory address (descending to show high -> low layout)
+df = df.sort_values("AddressInt", ascending=False)
+
+# Create a vertical plot
+plt.figure(figsize=(6, 8))
+y_positions = list(range(len(df)))
+plt.barh(y_positions, [1]*len(df), color="skyblue", edgecolor="black")
+
+# Add labels
+for i, row in enumerate(df.itertuples()):
+    label = f"{row.Variable} ({row.Section})\n{row.Address}"
+    plt.text(1.05, i, label, va="center", fontsize=10)
+
+# Formatting
+plt.yticks(y_positions, [])
+plt.xlabel("Memory Layout (High → Low)")
+plt.title("C++ Memory Layout Visualization")
+plt.gca().invert_yaxis()  # High addresses at top
+plt.tight_layout()
+
+# Save to file
+plt.savefig("memory_layout.png")
+plt.show()
