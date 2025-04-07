@@ -1,0 +1,33 @@
+// a method to collect memory addresses\
+// then log into a csv
+// to graph it using python
+
+
+#include <iostream>
+#include <fstream>
+
+int global_initialized = 10;       // Initialized data
+int global_uninitialized;          // BSS
+
+void showMemoryLayout() {
+    int local_stack = 1;           // Stack
+    int* heap_alloc = new int(2);  // Heap
+    const char* string_literal = "Hello"; // Text segment
+
+    std::ofstream file("layout.csv");
+    file << "Variable,Value,Address,Section\n";
+
+    file << "global_initialized," << global_initialized << "," << &global_initialized << ",Data\n";
+    file << "global_uninitialized," << global_uninitialized << "," << &global_uninitialized << ",BSS\n";
+    file << "local_stack," << local_stack << "," << &local_stack << ",Stack\n";
+    file << "heap_alloc,*" << *heap_alloc << "," << heap_alloc << ",Heap\n";
+    file << "string_literal," << string_literal << "," << static_cast<const void*>(string_literal) << ",Text\n";
+
+    file.close();
+    delete heap_alloc;
+}
+
+int main() {
+    showMemoryLayout();
+    return 0;
+}
