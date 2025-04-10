@@ -1,5 +1,4 @@
-Memory Visualization Project - CS3339 Spring 2025
-llaboration, and ensure code quality.
+Memory Visualization Project - CS3339 Spring 2025 - Git Workflow
 
 🌳 Branch Structure
 Our repository uses a structured branching model:
