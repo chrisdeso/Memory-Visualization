@@ -1,6 +1,6 @@
 # Stack and Heap Memory Visualization Tool
 
-A simple visualization tool that helps you see what's happening in memory for small C++ programs. Created by CS3339 students for the Spring 2025 term project.
+A simple visualization tool that helps you see what's happening in memory for small C++ programs. For CS3339 (Computer Architecture) at Texas State University - Spring 2025.
 
 ## What does this do?
 
