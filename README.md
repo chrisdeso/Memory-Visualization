@@ -13,7 +13,7 @@ Memory management is one of those computer science concepts that's super importa
 
 ## Why did we make this?
 
-Because we've all been there - staring at code, wondering why our pointers are causing segfaults or why our memory is leaking. This tool makes these abstract concepts visible so you can actually understand what's going on.
+To visualize memory allocation
 
 ## Features
 
