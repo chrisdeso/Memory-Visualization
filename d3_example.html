@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Icicle Chart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        #chart-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-container">
+        <!-- The chart will be rendered here -->
+    </div>
+
+    <script>
+    // Wait for the D3 library to load before executing the code
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if D3 is loaded
+        if (typeof d3 === 'undefined') {
+            console.error('D3.js library failed to load. Please check your internet connection or try a different CDN link.');
+            document.getElementById('chart-container').innerHTML = '<p>Error: Could not load D3.js library. Please check the console for details.</p>';
+            return;
+        }
+        // Sample hierarchical data - replace with your own
+        const data = {
+            name: "root",
+            children: [
+                {
+                    name: "Category A",
+                    children: [
+                        { name: "Sub-A1", value: 100 },
+                        { name: "Sub-A2", value: 300 },
+                        { name: "Sub-A3", value: 200 }
+                    ]
+                },
+                {
+                    name: "Category B",
+                    children: [
+                        { name: "Sub-B1", value: 200 },
+                        { name: "Sub-B2", value: 150 },
+                        { 
+                            name: "Sub-B3", 
+                            children: [
+                                { name: "Sub-B3-1", value: 50 },
+                                { name: "Sub-B3-2", value: 75 },
+                                { name: "Sub-B3-3", value: 25 }
+                            ] 
+                        }
+                    ]
+                },
+                {
+                    name: "Category C",
+                    value: 400
+                }
+            ]
+        };
+
+        // Specify the chart's dimensions.
+        const width = 928;
+        const height = 600; // Reduced from 2400 to fit better in viewport
+        const format = d3.format(",d");
+        
+        // Create a color scale (a color for each child of the root node and their descendants).
+        const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1));
+        
+        // Create a partition layout.
+        const partition = d3.partition()
+            .size([height, width])
+            .padding(1);
+        
+        // Apply the partition layout.
+        const root = partition(d3.hierarchy(data)
+            .sum(d => d.value)
+            .sort((a, b) => b.height - a.height || b.value - a.value));
+        
+        // Create the SVG container.
+        const svg = d3.create("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height])
+            .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif");
+        
+        // Add a cell for each node of the hierarchy.
+        const cell = svg
+            .selectAll()
+            .data(root.descendants())
+            .join("g")
+            .attr("transform", d => `translate(${d.y0},${d.x0})`);
+        
+        cell.append("title")
+            .text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${format(d.value)}`);
+        
+        // Color the cell with respect to which child of root it belongs to. 
+        cell.append("rect")
+            .attr("width", d => d.y1 - d.y0)
+            .attr("height", d => d.x1 - d.x0)
+            .attr("fill-opacity", 0.6)
+            .attr("fill", d => {
+                if (!d.depth) return "#ccc";
+                while (d.depth > 1) d = d.parent;
+                return color(d.data.name);
+            });
+        
+        // Add labels and a title.
+        const text = cell.filter(d => (d.x1 - d.x0) > 16).append("text")
+            .attr("x", 4)
+            .attr("y", 13);
+        
+        text.append("tspan")
+            .text(d => d.data.name);
+        
+        text.append("tspan")
+            .attr("fill-opacity", 0.7)
+            .text(d => ` ${format(d.value)}`);
+        
+        // Append the SVG to the DOM
+        document.getElementById("chart-container").appendChild(svg.node());
+    });
+    </script>
+</body>
+</html>
