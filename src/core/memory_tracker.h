@@ -15,4 +15,29 @@
 
 #ifndef MEMORY_TRACKER_H
 #define MEMORY_TRACKER_H
-// test comment
+#include <string>
+#include <sstream>
+
+class MemoryBlock {
+public:
+    void* address;       // Memory address of the allocation
+    size_t size;         // Size of the allocated memory
+    std::string timestamp; // Timestamp of the allocation
+
+    // Constructor
+    MemoryBlock(void* addr, size_t sz, const std::string& ts)
+        : address(addr), size(sz), timestamp(ts) {}
+
+    // Serialize to JSON format
+    std::string toJSON() const {
+        std::ostringstream oss;
+        oss << "{"
+            << "\"address\": \"" << address << "\", "
+            << "\"size\": " << size << ", "
+            << "\"timestamp\": \"" << timestamp << "\""
+            << "}";
+        return oss.str();
+    }
+};
+
+#endif // MEMORY_TRACKER_H
