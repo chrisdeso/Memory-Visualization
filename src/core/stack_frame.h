@@ -24,73 +24,60 @@ public:
     std::string name;   // Variable name
     std::string type;   // Variable type
     size_t size;        // Size of the variable
-    std::string value;  // Value of the variable (optional)
+    std::string value;  // Value of the variable
 
-    LocalVar(const std::string& name, const std::string& type, size_t size, const std::string& value = "")
-        : name(name), type(type), size(size), value(value) {}
+    LocalVar(std::string varName, std::string varType, size_t varSize, std::string varValue) {
+        name = varName;
+        type = varType;
+        size = varSize;
+        value = varValue;
+    }
 
+//consulted AI for the JSON part; subject to change depending on JSObjectNotation code
     std::string toJSON() const {
-        std::ostringstream oss;
-        oss << "{"
-            << "\"name\": \"" << name << "\", "
-            << "\"type\": \"" << type << "\", "
-            << "\"size\": " << size << ", "
-            << "\"value\": \"" << value << "\""
-            << "}";
-        return oss.str();
+        std::string json = "{\"name\": \"" + name + "\", ";
+        json += "\"type\": \"" + type + "\", ";
+        json += "\"size\": " + std::to_string(size) + ", ";
+        json += "\"value\": \"" + value + "\"}";
+        return json;
     }
 };
 
-// Represents a function's execution context
+
 class StackFrame {
 public:
     std::string functionName;  // Name of the function
-    std::string entryTimestamp; // Entry timestamp
-    std::string exitTimestamp;  // Exit timestamp
+    std::string entryTime;     // Timestampt for when the function starts
+    std::string exitTime;      // Timestamp for when the function ends
     std::vector<LocalVar> localVars; // List of local variables
 
-    StackFrame(const std::string& functionName)
-        : functionName(functionName), entryTimestamp(getCurrentTimestamp()) {}
-
-    void addLocalVar(const std::string& name, const std::string& type, size_t size, const std::string& value = "") {
-        localVars.emplace_back(name, type, size, value);
-        MemoryTracker::instance().logLocalVariable(name.c_str(), value, __FILE__, __LINE__);
+    StackFrame(std::string funcName) {
+        functionName = funcName;
+        entryTime = getCurrentTime();
     }
 
-    void removeLocalVar(const std::string& name) {
-        auto it = std::find_if(localVars.begin(), localVars.end(),
-                               [&name](const LocalVar& var) { return var.name == name; });
-        if (it != localVars.end()) {
-            localVars.erase(it);
+    void addLocalVar(std::string varName, std::string varType, size_t varSize, std::string varValue) {
+        LocalVar newVar(varName, varType, varSize, varValue);
+        localVars.push_back(newVar);
+    }
+
+    void removeLocalVar(std::string varName) {
+        for (size_t i = 0; i < localVars.size(); i++) {
+            if (localVars[i].name == varName) {
+                localVars.erase(localVars.begin() + i);
+                break;
+            }
         }
     }
 
-    void exit() {
-        exitTimestamp = getCurrentTimestamp();
-    }
-
-    std::string toJSON() const {
-        std::ostringstream oss;
-        oss << "{"
-            << "\"functionName\": \"" << functionName << "\", "
-            << "\"entryTimestamp\": \"" << entryTimestamp << "\", "
-            << "\"exitTimestamp\": \"" << exitTimestamp << "\", "
-            << "\"localVars\": [";
-        for (size_t i = 0; i < localVars.size(); ++i) {
-            oss << localVars[i].toJSON();
-            if (i < localVars.size() - 1) oss << ", ";
-        }
-        oss << "]"
-            << "}";
-        return oss.str();
+    void endFunction() {
+        exitTime = getCurrentTime();
     }
 
 private:
-    static std::string getCurrentTimestamp() {
-        auto now = std::chrono::system_clock::now();
-        auto epoch_seconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-        return std::to_string(epoch_seconds);
+    std::string getCurrentTime() {
+        return "current_time_placeholder"; 
     }
 };
 
-#endif // STACK_FRAME_H
+#endif // STACK_FRAME_H 
