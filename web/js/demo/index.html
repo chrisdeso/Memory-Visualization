@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Visualization Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .header {
+            background-color: #00b8a9;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .code-panel {
+            width: 40%;
+            background-color: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+        
+        .code-header {
+            background-color: #00b8a9;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+        
+        .code-container {
+            padding: 10px;
+            overflow: auto;
+            flex: 1;
+        }
+        
+        .reset-button {
+            background-color: #00b8a9;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin: 10px auto;
+            display: block;
+            cursor: pointer;
+            font-weight: bold;
+            width: 90%;
+        }
+        
+        pre {
+            margin: 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .code-line {
+            padding: 2px 0;
+        }
+        
+        .code-line.highlight {
+            background-color: #ffe0b2;
+        }
+        
+        .visualization-panel {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .step-header {
+            background-color: #00b8a9;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+        .memory-view {
+            padding: 10px;
+            overflow: auto;
+            flex: 1;
+        }
+        
+        .step-description {
+            background-color: #fff3cd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .memory-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .memory-region {
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .memory-region-header {
+            padding: 8px 10px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stack-header {
+            background-color: #e91e63;
+        }
+        
+        .static-header {
+            background-color: #ff9800;
+        }
+        
+        .heap-header {
+            background-color: #2196f3;
+        }
+        
+        .memory-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .memory-table tr {
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .memory-table tr:last-child {
+            border-bottom: none;
+        }
+        
+        .memory-table td {
+            padding: 8px 10px;
+        }
+        
+        .memory-table .name-col {
+            width: 20%;
+            font-weight: bold;
+        }
+        
+        .memory-table .addr-col {
+            width: 20%;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #555;
+        }
+        
+        .memory-table .value-col {
+            width: 60%;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .stack-table {
+            background-color: #ffebee;
+        }
+        
+        .static-table {
+            background-color: #fff3e0;
+        }
+        
+        .heap-table {
+            background-color: #e3f2fd;
+        }
+        
+        .highlight-row {
+            background-color: #ffe0b2 !important;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #ddd;
+        }
+        
+        .nav-button {
+            background-color: #00b8a9;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .empty-message {
+            font-style: italic;
+            color: #666;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg class="logo" viewBox="0 0 50 50">
+            <rect x="5" y="5" width="40" height="10" fill="#ffebee" />
+            <rect x="5" y="20" width="40" height="10" fill="#fff3e0" />
+            <rect x="5" y="35" width="40" height="10" fill="#e3f2fd" />
+            <rect x="10" y="8" width="10" height="4" fill="#ffeb3b" />
+        </svg>
+        <div class="title">Memory Visualization Tool</div>
+    </div>
+    
+    <div class="main-container">
+        <div class="code-panel">
+            <div class="code-header">Basic function</div>
+            <div class="code-container">
+                <button class="reset-button" id="reset-button">Reset</button>
+                <pre id="code-display"></pre>
+            </div>
+        </div>
+        
+        <div class="visualization-panel">
+            <div class="step-header" id="step-title">Step 1: Initial program state</div>
+            <div class="memory-view">
+                <div class="step-description" id="step-description">
+                    The program starts with global variables declared but not initialized with specific values.
+                </div>
+                
+                <div class="memory-container">
+                    <div class="memory-region">
+                        <div class="memory-region-header stack-header">
+                            <span>Stack (globals)</span>
+                        </div>
+                        <table class="memory-table stack-table" id="stack-table">
+                            <tr>
+                                <td class="name-col">x[0]</td>
+                                <td class="addr-col">0x7fff5fbff810</td>
+                                <td class="value-col">0.0</td>
+                            </tr>
+                            <tr>
+                                <td class="name-col">x[1]</td>
+                                <td class="addr-col">0x7fff5fbff818</td>
+                                <td class="value-col">0.0</td>
+                            </tr>
+                            <tr>
+                                <td class="name-col">x[2]</td>
+                                <td class="addr-col">0x7fff5fbff820</td>
+                                <td class="value-col">0.0</td>
+                            </tr>
+                            <tr>
+                                <td class="name-col">y</td>
+                                <td class="addr-col">0x7fff5fbff828</td>
+                                <td class="value-col">NULL</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="memory-region" id="static-region" style="display: none;">
+                        <div class="memory-region-header static-header">
+                            <span>Static data (function frames)</span>
+                        </div>
+                        <table class="memory-table static-table" id="static-table">
+                            <!-- Will be populated dynamically -->
+                        </table>
+                    </div>
+                    
+                    <div class="memory-region">
+                        <div class="memory-region-header heap-header">
+                            <span>Heap memory</span>
+                        </div>
+                        <table class="memory-table heap-table" id="heap-table">
+                            <tr>
+                                <td colspan="3" class="empty-message">No allocations yet</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-button" id="prev-button" disabled>Previous</button>
+                <button class="nav-button" id="next-button">Next</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Code to display
+        const codeText = `double x[3];
+int *y;
+
+void foo(int a) {
+    y = malloc(3 * sizeof(int));
+    int j;
+    
+    for (j = 1; j < 3; j++) {
+        y[j] = 3 + a * x[j - 1];
+    }
+    
+    bar(a);
+}`;
+
+        // Step data
+        const steps = [
+            {
+                title: "Step 1: Initial program state",
+                description: "The program starts with global variables declared but not initialized with specific values.",
+                codeLine: -1,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "NULL", highlight: false }
+                ],
+                static: [],
+                heap: []
+            },
+            {
+                title: "Step 2: Function call to foo(5)",
+                description: "The function foo() is called with parameter a=5. A new stack frame is created.",
+                codeLine: 3,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "NULL", highlight: false }
+                ],
+                static: [
+                    { name: "a", address: "0x7fff5fbff7e0", value: "5", frame: "foo() frame", highlight: true }
+                ],
+                heap: []
+            },
+            {
+                title: "Step 3: Memory allocation",
+                description: "The malloc() function allocates 3 integers on the heap. The pointer y now points to this memory.",
+                codeLine: 4,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "0x55555576b2a0", highlight: true }
+                ],
+                static: [
+                    { name: "a", address: "0x7fff5fbff7e0", value: "5", frame: "foo() frame", highlight: false }
+                ],
+                heap: [
+                    { name: "y[0]", address: "0x55555576b2a0", value: "0", highlight: true },
+                    { name: "y[1]", address: "0x55555576b2a4", value: "0", highlight: true },
+                    { name: "y[2]", address: "0x55555576b2a8", value: "0", highlight: true }
+                ]
+            },
+            {
+                title: "Step 4: Local variable declaration",
+                description: "A local variable j is declared in the foo() function and initialized.",
+                codeLine: 5,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "0x55555576b2a0", highlight: false }
+                ],
+                static: [
+                    { name: "a", address: "0x7fff5fbff7e0", value: "5", frame: "foo() frame", highlight: false },
+                    { name: "j", address: "0x7fff5fbff7dc", value: "1", frame: "foo() frame", highlight: true }
+                ],
+                heap: [
+                    { name: "y[0]", address: "0x55555576b2a0", value: "0", highlight: false },
+                    { name: "y[1]", address: "0x55555576b2a4", value: "0", highlight: false },
+                    { name: "y[2]", address: "0x55555576b2a8", value: "0", highlight: false }
+                ]
+            },
+            {
+                title: "Step 5: Loop iteration (j=1)",
+                description: "The first iteration of the for loop. The array element y[1] is assigned a new value.",
+                codeLine: 8,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "0x55555576b2a0", highlight: false }
+                ],
+                static: [
+                    { name: "a", address: "0x7fff5fbff7e0", value: "5", frame: "foo() frame", highlight: false },
+                    { name: "j", address: "0x7fff5fbff7dc", value: "1", frame: "foo() frame", highlight: false }
+                ],
+                heap: [
+                    { name: "y[0]", address: "0x55555576b2a0", value: "0", highlight: false },
+                    { name: "y[1]", address: "0x55555576b2a4", value: "3", highlight: true },
+                    { name: "y[2]", address: "0x55555576b2a8", value: "0", highlight: false }
+                ]
+            },
+            {
+                title: "Step 6: Loop iteration (j=2)",
+                description: "The second iteration of the for loop. The variable j is incremented, and y[2] is assigned a new value.",
+                codeLine: 8,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "0x55555576b2a0", highlight: false }
+                ],
+                static: [
+                    { name: "a", address: "0x7fff5fbff7e0", value: "5", frame: "foo() frame", highlight: false },
+                    { name: "j", address: "0x7fff5fbff7dc", value: "2", frame: "foo() frame", highlight: true }
+                ],
+                heap: [
+                    { name: "y[0]", address: "0x55555576b2a0", value: "0", highlight: false },
+                    { name: "y[1]", address: "0x55555576b2a4", value: "3", highlight: false },
+                    { name: "y[2]", address: "0x55555576b2a8", value: "3", highlight: true }
+                ]
+            },
+            {
+                title: "Step 7: Function call to bar()",
+                description: "The function bar() is called with the same parameter. A new stack frame is created.",
+                codeLine: 11,
+                stack: [
+                    { name: "x[0]", address: "0x7fff5fbff810", value: "0.0", highlight: false },
+                    { name: "x[1]", address: "0x7fff5fbff818", value: "0.0", highlight: false },
+                    { name: "x[2]", address: "0x7fff5fbff820", value: "0.0", highlight: false },
+                    { name: "y", address: "0x7fff5fbff828", value: "0x55555576b2a0", highlight: false }
+                ],
+                static: [
+                    { name: "a", address: "0x7fff5fbff7e0", value: "5", frame: "foo() frame", highlight: false },
+                    { name: "j", address: "0x7fff5fbff7dc", value: "3", frame: "foo() frame", highlight: false },
+                    { name: "a", address: "0x7fff5fbff7b0", value: "5", frame: "bar() frame", highlight: true }
+                ],
+                heap: [
+                    { name: "y[0]", address: "0x55555576b2a0", value: "0", highlight: false },
+                    { name: "y[1]", address: "0x55555576b2a4", value: "3", highlight: false },
+                    { name: "y[2]", address: "0x55555576b2a8", value: "3", highlight: false }
+                ]
+            }
+        ];
+
+        // Current step
+        let currentStep = 0;
+        
+        // DOM elements
+        const codeDisplay = document.getElementById('code-display');
+        const stepTitle = document.getElementById('step-title');
+        const stepDescription = document.getElementById('step-description');
+        const stackTable = document.getElementById('stack-table');
+        const staticRegion = document.getElementById('static-region');
+        const staticTable = document.getElementById('static-table');
+        const heapTable = document.getElementById('heap-table');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const resetButton = document.getElementById('reset-button');
+        
+        // Initialize code display
+        function initializeCodeDisplay() {
+            // Split code by lines
+            const lines = codeText.split('\n');
+            
+            // Create HTML for code display
+            let codeHtml = '';
+            lines.forEach((line, index) => {
+                codeHtml += `<div class="code-line" id="line-${index}">${line}</div>`;
+            });
+            
+            codeDisplay.innerHTML = codeHtml;
+        }
+        
+        // Update view based on current step
+        function updateView() {
+            const step = steps[currentStep];
+            
+            // Update step info
+            stepTitle.textContent = step.title;
+            stepDescription.textContent = step.description;
+            
+            // Update code highlighting
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('highlight');
+            });
+            
+            if (step.codeLine >= 0) {
+                const lineElement = document.getElementById(`line-${step.codeLine}`);
+                if (lineElement) {
+                    lineElement.classList.add('highlight');
+                    lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+            
+            // Update stack table
+            let stackHtml = '';
+            step.stack.forEach(item => {
+                stackHtml += `<tr class="${item.highlight ? 'highlight-row' : ''}">
+                    <td class="name-col">${item.name}</td>
+                    <td class="addr-col">${item.address}</td>
+                    <td class="value-col">${item.value}</td>
+                </tr>`;
+            });
+            stackTable.innerHTML = stackHtml;
+            
+            // Update static table
+            if (step.static.length > 0) {
+                staticRegion.style.display = 'block';
+                
+                // Group by frame
+                const frames = {};
+                step.static.forEach(item => {
+                    if (!frames[item.frame]) {
+                        frames[item.frame] = [];
+                    }
+                    frames[item.frame].push(item);
+                });
+                
+                let staticHtml = '';
+                Object.keys(frames).forEach(frame => {
+                    staticHtml += `<tr>
+                        <td colspan="3" class="name-col" style="background-color: #ffcc80; color: #333;">${frame}</td>
+                    </tr>`;
+                    
+                    frames[frame].forEach(item => {
+                        staticHtml += `<tr class="${item.highlight ? 'highlight-row' : ''}">
+                            <td class="name-col">${item.name}</td>
+                            <td class="addr-col">${item.address}</td>
+                            <td class="value-col">${item.value}</td>
+                        </tr>`;
+                    });
+                });
+                
+                staticTable.innerHTML = staticHtml;
+            } else {
+                staticRegion.style.display = 'none';
+            }
+            
+            // Update heap table
+            if (step.heap.length > 0) {
+                let heapHtml = '';
+                step.heap.forEach(item => {
+                    heapHtml += `<tr class="${item.highlight ? 'highlight-row' : ''}">
+                        <td class="name-col">${item.name}</td>
+                        <td class="addr-col">${item.address}</td>
+                        <td class="value-col">${item.value}</td>
+                    </tr>`;
+                });
+                heapTable.innerHTML = heapHtml;
+            } else {
+                heapTable.innerHTML = '<tr><td colspan="3" class="empty-message">No allocations yet</td></tr>';
+            }
+            
+            // Update navigation buttons
+            prevButton.disabled = currentStep === 0;
+            nextButton.disabled = currentStep === steps.length - 1;
+        }
+        
+        // Event listeners
+        prevButton.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateView();
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateView();
+            }
+        });
+        
+        resetButton.addEventListener('click', () => {
+            currentStep = 0;
+            updateView();
+            
+            // Change button text temporarily
+            resetButton.textContent = 'Resetting...';
+            setTimeout(() => {
+                resetButton.textContent = 'Reset';
+            }, 1000);
+        });
+        
+        // Initialize the visualization
+        initializeCodeDisplay();
+        updateView();
+    </script>
+</body>
+</html>
