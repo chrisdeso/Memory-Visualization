@@ -20,7 +20,7 @@ g++ "$SRC_FILE" src/wrappers/memory_wrappers.cpp -o "$EXE_FILE"
 echo "Running memory tracker (edit this command as needed)..."
 # 2. Run with your memory tracker (edit this line for your setup)
 # Example: ./memory_tracker ./$EXE_FILE > trace.json
-./$EXE_FILE # <-- Replace this with your memory tracking command
+./$EXE_FILE "$SRC_FILE" # <-- Pass source file name for set_source_code
 
 # 3. Move the generated trace.json to the web directory
 if [ -f trace.json ]; then

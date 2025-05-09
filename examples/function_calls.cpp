@@ -23,8 +23,9 @@ void add(int a, int b) {
     TRACK_FUNC_EXIT();
 }
 
-int main() {
+int main(int argc, char** argv) {
     std::cout << "[DEBUG] main() started" << std::endl;
+    if (argc > 1) set_source_code(argv[1]);
     g_tracking_enabled = true;
     std::cout << "[DEBUG] after g_tracking_enabled = true" << std::endl;
     TRACK_GLOBAL(x);
