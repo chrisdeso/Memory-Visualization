@@ -49,14 +49,26 @@ public:
     }
 };
 
+// MemoryTracker class
+// This class keeps track of all memory blocks in our program
+// It's like a manager that knows about all the memory we've allocated
 class MemoryTracker {
 private:
+    // Map of memory addresses to their corresponding MemoryBlock objects
+    // Using unordered_map because we need fast lookups by address
     std::unordered_map<void*, MemoryBlock*> memoryBlocks;
+    
+    // Mutex to make our tracker thread-safe
+    // We learned about mutexes in class for handling concurrent access
     std::mutex trackerMutex;
     JsonSerializer jsonSerializer;
 
 public:
+    // Default constructor
     MemoryTracker() = default;
+    
+    // Destructor to clean up any remaining memory blocks
+    // This helps prevent memory leaks in our tracker itself
     ~MemoryTracker() {
         // Clean up any remaining memory blocks
         for (auto& pair : memoryBlocks) {
@@ -64,11 +76,15 @@ public:
         }
     }
 
+    // Called when new memory is allocated
+    // Creates a new MemoryBlock to track this allocation
     void trackAllocation(void* ptr, size_t size) {
         std::lock_guard<std::mutex> lock(trackerMutex);
         memoryBlocks[ptr] = new MemoryBlock(ptr, size);
     }
 
+    // Called when memory is freed
+    // Updates the MemoryBlock to show it's been deallocated
     void trackDeallocation(void* ptr) {
         std::lock_guard<std::mutex> lock(trackerMutex);
         auto it = memoryBlocks.find(ptr);
@@ -78,6 +94,8 @@ public:
         }
     }
 
+    // Get all memory blocks that are still allocated
+    // This is useful for showing active memory in our visualization
     std::vector<MemoryBlock*> getActiveBlocks() const {
         std::vector<MemoryBlock*> active;
         for (const auto& pair : memoryBlocks) {
@@ -88,6 +106,8 @@ public:
         return active;
     }
 
+    // Get all memory blocks that haven't been freed
+    // This helps us detect memory leaks
     std::vector<MemoryBlock*> getLeakedBlocks() const {
         std::vector<MemoryBlock*> leaked;
         for (const auto& pair : memoryBlocks) {
