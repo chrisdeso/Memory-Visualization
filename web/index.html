@@ -4,254 +4,384 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Visualization Tool</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="js/visualization.js"></script>
-    <script src="js/heap-visualization.js"></script>
-    <script src="js/stack-visualization.js"></script>
-    <script src="js/timeline-navigation.js"></script>
-    <script src="js/statics-visualization.js"></script>
     <style>
-        :root {
-            --teal: #00bfae;
-            --teal-dark: #009688;
-            --stack-bg: #f8bbd0;
-            --stack-header: #e91e63;
-            --static-bg: #ffe0b2;
-            --static-header: #ff9800;
-            --heap-bg: #b3e5fc;
-            --heap-header: #039be5;
-            --step-bg: #e0f7fa;
-            --step-header: #0097a7;
-            --desc-bg: #fff8e1;
-            --desc-border: #ffe082;
-            --button-green: #00bfae;
-            --button-green-dark: #009688;
-            --button-gray: #bdbdbd;
-            --code-bg: #f5f5f5;
-            --code-border: #e0e0e0;
-        }
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            background: #f5f5f5;
-            color: #333;
-        }
-        .main-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-        .sidebar {
-            background: var(--teal);
-            color: #fff;
-            width: 320px;
-            min-width: 260px;
             padding: 0;
+            background-color: #f5f5f5;
             display: flex;
             flex-direction: column;
+            height: 100vh;
         }
-        .sidebar-header {
+        
+        .header {
+            background-color: #00b8a9;
+            color: white;
+            padding: 10px 20px;
             display: flex;
             align-items: center;
-            padding: 24px 24px 12px 24px;
-            background: var(--teal);
         }
-        .hamburger {
-            width: 32px;
-            height: 32px;
-            margin-right: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        
+        .logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
         }
-        .hamburger span {
-            display: block;
-            height: 4px;
-            width: 24px;
-            background: #fff;
-            margin: 3px 0;
-            border-radius: 2px;
-        }
-        .sidebar-title {
-            font-size: 1.4em;
+        
+        .title {
+            font-size: 20px;
             font-weight: bold;
-            letter-spacing: 1px;
         }
-        .sidebar-section {
-            padding: 0 24px 24px 24px;
-        }
-        .sidebar-section .section-label {
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 10px;
-            margin-top: 10px;
-        }
-        .reset-btn {
-            background: var(--button-green);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 32px;
-            font-size: 1em;
-            font-weight: 600;
-            margin: 12px 0 16px 0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .reset-btn:hover {
-            background: var(--button-green-dark);
-        }
-        .code-block {
-            background: var(--code-bg);
-            border: 1px solid var(--code-border);
-            border-radius: 4px;
-            padding: 16px;
-            font-family: 'Fira Mono', 'Consolas', monospace;
-            font-size: 1em;
-            white-space: pre;
-            margin-bottom: 0;
-        }
-        .highlight-line {
-            background: #ffe082;
-            display: block;
-            margin: 0 -16px;
-            padding: 0 16px;
-        }
-        .right-panel {
+        
+        .main-container {
+            display: flex;
             flex: 1;
+            overflow: hidden;
+        }
+        
+        .code-panel {
+            width: 40%;
+            background-color: white;
+            border-right: 1px solid #ddd;
             display: flex;
             flex-direction: column;
             padding: 0;
         }
-        .step-bar {
-            background: var(--step-header);
-            color: #fff;
-            padding: 16px 32px;
-            font-size: 1.1em;
-            font-weight: 500;
+        
+        .code-header {
+            background-color: #00b8a9;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+        
+        .code-container {
+            padding: 10px;
+            overflow: auto;
+            flex: 1;
+        }
+        
+        .reset-button {
+            background-color: #00b8a9;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin: 10px auto;
+            display: block;
+            cursor: pointer;
+            font-weight: bold;
+            width: 90%;
+        }
+        
+        pre {
+            margin: 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .code-line {
+            padding: 2px 0;
+        }
+        
+        .code-line.highlight {
+            background-color: #ffe0b2;
+        }
+        
+        .visualization-panel {
+            width: 60%;
             display: flex;
-            align-items: center;
-        }
-        .step-desc {
-            background: var(--desc-bg);
-            border-left: 6px solid var(--desc-border);
-            padding: 12px 24px;
-            font-size: 1em;
-            color: #333;
-        }
-        .mem-section {
-            margin: 24px 32px 0 32px;
-            border-radius: 6px;
+            flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
-        .mem-header {
-            font-weight: 600;
-            padding: 10px 18px;
-            font-size: 1.1em;
+        
+        .step-header {
+            background-color: #00b8a9;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
         }
-        .stack-section {
-            background: var(--stack-bg);
+        
+        .memory-view {
+            padding: 10px;
+            overflow: auto;
+            flex: 1;
         }
+        
+        .step-description {
+            background-color: #fff3cd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .memory-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .memory-region {
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .memory-region-header {
+            padding: 8px 10px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+        }
+        
         .stack-header {
-            background: var(--stack-header);
-            color: #fff;
+            background-color: #e91e63;
         }
-        .static-section {
-            background: var(--static-bg);
-        }
+        
         .static-header {
-            background: var(--static-header);
-            color: #fff;
+            background-color: #ff9800;
         }
-        .heap-section {
-            background: var(--heap-bg);
-        }
+        
         .heap-header {
-            background: var(--heap-header);
-            color: #fff;
+            background-color: #2196f3;
         }
-        .mem-table {
+        
+        .memory-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 1em;
         }
-        .mem-table th, .mem-table td {
-            padding: 6px 12px;
-            text-align: left;
+        
+        .memory-table tr {
+            border-bottom: 1px solid #ddd;
         }
-        .mem-table th {
-            font-weight: 600;
+        
+        .memory-table tr:last-child {
+            border-bottom: none;
         }
-        .mem-table tr {
-            border-bottom: 1px solid #fff;
+        
+        .memory-table td {
+            padding: 8px 10px;
         }
-        .nav-btns {
+        
+        .memory-table .name-col {
+            width: 20%;
+            font-weight: bold;
+        }
+        
+        .memory-table .addr-col {
+            width: 20%;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #555;
+        }
+        
+        .memory-table .value-col {
+            width: 60%;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .stack-table {
+            background-color: #ffebee;
+        }
+        
+        .static-table {
+            background-color: #fff3e0;
+        }
+        
+        .heap-table {
+            background-color: #e3f2fd;
+        }
+        
+        .highlight-row {
+            background-color: #ffe0b2 !important;
+        }
+        
+        .navigation {
             display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin: 24px 32px 32px 32px;
+            justify-content: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #ddd;
         }
-        .nav-btn {
+        
+        .nav-button {
+            background-color: #00b8a9;
+            color: white;
             border: none;
+            padding: 8px 20px;
+            margin: 0 5px;
             border-radius: 4px;
-            padding: 8px 28px;
-            font-size: 1em;
-            font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            font-weight: bold;
         }
-        .nav-btn.prev {
-            background: var(--button-green);
-            color: #fff;
+        
+        .nav-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
-        .nav-btn.next {
-            background: var(--button-gray);
-            color: #fff;
-        }
-        .nav-btn.prev:active, .nav-btn.prev:hover {
-            background: var(--button-green-dark);
-        }
-        .nav-btn.next:active, .nav-btn.next:hover {
-            background: #757575;
-        }
-        @media (max-width: 900px) {
-            .main-layout { flex-direction: column; }
-            .sidebar { width: 100%; min-width: 0; }
-            .right-panel { padding: 0; }
-            .mem-section, .nav-btns { margin: 16px 8px; }
+        
+        .empty-message {
+            font-style: italic;
+            color: #666;
+            padding: 10px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-<div class="main-layout">
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="hamburger">
-                <span></span><span></span><span></span>
+    <div class="header">
+        <svg class="logo" viewBox="0 0 50 50">
+            <rect x="5" y="5" width="40" height="10" fill="#ffebee" />
+            <rect x="5" y="20" width="40" height="10" fill="#fff3e0" />
+            <rect x="5" y="35" width="40" height="10" fill="#e3f2fd" />
+            <rect x="10" y="8" width="10" height="4" fill="#ffeb3b" />
+        </svg>
+        <div class="title">Memory Visualization Tool</div>
+    </div>
+    
+    <div class="main-container">
+        <div class="code-panel">
+            <div class="code-header">Source Code</div>
+            <div class="code-container">
+                <button class="reset-button" id="reset-button">Reset</button>
+                <pre id="code-display"></pre>
             </div>
-            <span class="sidebar-title">Memory Visualization Tool</span>
         </div>
-        <div class="sidebar-section">
-            <div class="section-label">Basic function</div>
-            <button class="reset-btn" id="reset-btn">Reset</button>
-            <pre id="code-block" class="code-block"></pre>
+        
+        <div class="visualization-panel">
+            <div class="step-header">Memory State</div>
+            <div class="memory-view">
+                <div class="step-description" id="step-description"></div>
+                <div class="memory-container" id="memory-container"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-button" disabled>Previous</button>
+                <button class="nav-button" id="next-button">Next</button>
+            </div>
         </div>
-    </aside>
-    <main class="right-panel">
-        <div id="step-bar" class="step-bar"></div>
-        <div id="step-desc" class="step-desc"></div>
-        <div id="stack-section" class="mem-section stack-section">
-            <div id="stack"></div>
-            <div id="statics"></div>
-        </div>
-        <div id="heap-section" class="mem-section heap-section">
-            <div id="heap"></div>
-        </div>
-        <div class="nav-btns">
-            <button class="nav-btn prev" id="prev-btn">Previous</button>
-            <button class="nav-btn next" id="next-btn">Next</button>
-        </div>
-    </main>
-</div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let traceData = null;
+        let sourceCode = '';
+
+        async function loadTrace() {
+            try {
+                const response = await fetch('trace.json');
+                traceData = await response.json();
+                sourceCode = traceData.source_code;
+                updateDisplay();
+            } catch (error) {
+                console.error('Error loading trace:', error);
+            }
+        }
+
+        function updateDisplay() {
+            if (!traceData || currentStep >= traceData.steps.length) return;
+
+            const step = traceData.steps[currentStep];
+            
+            // Update code highlighting
+            const codeDisplay = document.getElementById('code-display');
+            const lines = sourceCode.split('\n');
+            codeDisplay.innerHTML = lines.map((line, i) => 
+                `<div class="code-line ${i + 1 === step.line_number ? 'highlight' : ''}">${line}</div>`
+            ).join('');
+
+            // Update step description
+            document.getElementById('step-description').textContent = step.description;
+
+            // Update memory visualization
+            const memoryContainer = document.getElementById('memory-container');
+            memoryContainer.innerHTML = '';
+
+            // Stack memory
+            if (step.stack.length > 0) {
+                const stackRegion = createMemoryRegion('Stack', 'stack');
+                const stackTable = createMemoryTable(step.stack, 'stack');
+                stackRegion.appendChild(stackTable);
+                memoryContainer.appendChild(stackRegion);
+            }
+
+            // Static memory
+            if (step.static.length > 0) {
+                const staticRegion = createMemoryRegion('Static', 'static');
+                const staticTable = createMemoryTable(step.static, 'static');
+                staticRegion.appendChild(staticTable);
+                memoryContainer.appendChild(staticRegion);
+            }
+
+            // Heap memory
+            if (step.heap.length > 0) {
+                const heapRegion = createMemoryRegion('Heap', 'heap');
+                const heapTable = createMemoryTable(step.heap, 'heap');
+                heapRegion.appendChild(heapTable);
+                memoryContainer.appendChild(heapRegion);
+            }
+
+            // Update navigation buttons
+            document.getElementById('prev-button').disabled = currentStep === 0;
+            document.getElementById('next-button').disabled = currentStep === traceData.steps.length - 1;
+        }
+
+        function createMemoryRegion(title, type) {
+            const region = document.createElement('div');
+            region.className = 'memory-region';
+            
+            const header = document.createElement('div');
+            header.className = `memory-region-header ${type}-header`;
+            header.textContent = title;
+            
+            region.appendChild(header);
+            return region;
+        }
+
+        function createMemoryTable(items, type) {
+            const table = document.createElement('table');
+            table.className = `memory-table ${type}-table`;
+            
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                if (item.highlight) row.className = 'highlight-row';
+                
+                row.innerHTML = `
+                    <td class="name-col">${item.name}</td>
+                    <td class="addr-col">${item.address}</td>
+                    <td class="value-col">${item.value}</td>
+                `;
+                
+                table.appendChild(row);
+            });
+            
+            return table;
+        }
+
+        // Event listeners
+        document.getElementById('prev-button').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+
+        document.getElementById('next-button').addEventListener('click', () => {
+            if (currentStep < traceData.steps.length - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+
+        document.getElementById('reset-button').addEventListener('click', () => {
+            currentStep = 0;
+            updateDisplay();
+        });
+
+        // Initialize
+        loadTrace();
+    </script>
 </body>
 </html> 

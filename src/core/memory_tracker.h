@@ -41,6 +41,9 @@ struct StepSnapshot {
     std::vector<StackFrame> stackFrames;
     std::vector<VariableInfo> statics;
     std::string heapJson; // for now, use existing heap serialization
+    // New: flat arrays for frontend
+    std::vector<VariableInfo> stackVars;
+    std::vector<VariableInfo> staticVars;
 };
 
 // MemoryTracker class
@@ -140,14 +143,27 @@ public:
         bool was_tracking = g_tracking_enabled;
         g_tracking_enabled = false;
         StepSnapshot snap{code, highlight, step, desc, globals, {}, statics, toJson()};
-        g_tracking_enabled = was_tracking;
         // Copy stack frames
         std::stack<StackFrame> tmp = callStack;
         std::vector<StackFrame> frames;
         while (!tmp.empty()) { frames.push_back(tmp.top()); tmp.pop(); }
         std::reverse(frames.begin(), frames.end());
         snap.stackFrames = frames;
+        // Flatten stack: all locals from all frames + all globals
+        for (const auto& frame : snap.stackFrames) {
+            for (const auto& var : frame.locals) {
+                snap.stackVars.push_back(var);
+            }
+        }
+        for (const auto& g : globals) {
+            snap.stackVars.push_back(g);
+        }
+        // Flatten static
+        for (const auto& s : statics) {
+            snap.staticVars.push_back(s);
+        }
         steps.push_back(snap);
+        g_tracking_enabled = was_tracking;
     }
     const std::vector<StepSnapshot>& getSteps() const { return steps; }
 

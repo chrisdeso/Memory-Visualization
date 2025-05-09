@@ -24,4 +24,7 @@ void dump_trace_json();
 #define TRACK_GLOBAL(var) globalMemoryTracker.trackGlobal(#var, (void*)&var, std::to_string(var))
 #define TRACK_STATIC(var) globalMemoryTracker.trackStatic(#var, (void*)&var, std::to_string(var))
 
+extern std::string g_source_code;
+void set_source_code(const std::string& filename);
+
 

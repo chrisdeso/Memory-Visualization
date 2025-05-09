@@ -67,30 +67,45 @@ public:
             const auto& step = steps[i];
             ss << "  {\n";
             ss << "    \"step\": \"" << step.step << "\",\n";
-            ss << "    \"desc\": \"" << step.desc << "\",\n";
-            // Stack
+            ss << "    \"description\": \"" << step.desc << "\",\n";
+            ss << "    \"line_number\": " << step.highlight << ",\n";
+            // Use flat stackVars
             ss << "    \"stack\": [";
-            for (size_t j = 0; j < step.stackFrames.size(); ++j) {
-                const auto& frame = step.stackFrames[j];
-                ss << "{\"id\": " << j+1 << ", \"function_name\": \"" << frame.functionName << "\", \"variables\": [";
-                for (size_t k = 0; k < frame.locals.size(); ++k) {
-                    const auto& var = frame.locals[k];
-                    ss << "{\"name\": \"" << var.name << "\", \"value\": " << var.value << "}";
-                    if (k + 1 < frame.locals.size()) ss << ", ";
-                }
-                ss << "]}";
-                if (j + 1 < step.stackFrames.size()) ss << ", ";
+            for (size_t j = 0; j < step.stackVars.size(); ++j) {
+                const auto& var = step.stackVars[j];
+                if (j > 0) ss << ", ";
+                ss << "{\"name\": \"" << var.name << "\", \"address\": \"" << var.address << "\", \"value\": \"" << var.value << "\", \"highlight\": false}";
             }
             ss << "],\n";
-            // Heap
-            ss << "    \"heap\": ";
-            ss << step.heapJson << ",\n";
-            // Statics
-            ss << "    \"statics\": [";
-            for (size_t j = 0; j < step.statics.size(); ++j) {
-                const auto& s = step.statics[j];
-                ss << "{\"name\": \"" << s.name << "\", \"value\": " << s.value << "}";
-                if (j + 1 < step.statics.size()) ss << ", ";
+            // Use flat staticVars
+            ss << "    \"static\": [";
+            for (size_t j = 0; j < step.staticVars.size(); ++j) {
+                const auto& s = step.staticVars[j];
+                if (j > 0) ss << ", ";
+                ss << "{\"name\": \"" << s.name << "\", \"address\": \"" << s.address << "\", \"value\": \"" << s.value << "\", \"highlight\": false}";
+            }
+            ss << "],\n";
+            // Heap: show address/size/value for each block
+            ss << "    \"heap\": [";
+            std::string heapJson = step.heapJson;
+            size_t pos = heapJson.find("["), end = heapJson.find("]");
+            if (pos != std::string::npos && end != std::string::npos && end > pos) {
+                std::string blocks = heapJson.substr(pos + 1, end - pos - 1);
+                // Parse each block and output as {address, value, highlight}
+                std::stringstream blockss(blocks);
+                std::string block;
+                bool first = true;
+                while (std::getline(blockss, block, '}')) {
+                    size_t addr_pos = block.find("\"address\": ");
+                    size_t size_pos = block.find("\"size\": ");
+                    if (addr_pos != std::string::npos && size_pos != std::string::npos) {
+                        std::string addr = block.substr(addr_pos + 12, block.find('"', addr_pos + 12) - (addr_pos + 12));
+                        std::string size = block.substr(size_pos + 8, block.find(',', size_pos + 8) - (size_pos + 8));
+                        if (!first) ss << ", ";
+                        first = false;
+                        ss << "{\"name\": \"block\", \"address\": \"" << addr << "\", \"value\": \"size=" << size << "\", \"highlight\": false}";
+                    }
+                }
             }
             ss << "]\n  }";
             if (i + 1 < steps.size()) ss << ",\n";
