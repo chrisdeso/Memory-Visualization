@@ -1,7 +1,7 @@
 # Stack and Heap Memory Visualization Tool
 ## CS3339 (Computer Architecture) at Texas State University - Spring 2025
 
-![image](https://github.com/user-attachments/assets/39088b35-6fb9-4d56-9b09-5071c97d4b40)
+![image](https://github.com/user-attachments/assets/a167326c-460d-445e-bae8-aa52f56184b9)
 
 ## Table of Contents
 1. [Project description](#project-description)
