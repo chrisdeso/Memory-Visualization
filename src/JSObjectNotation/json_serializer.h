@@ -1,8 +1,12 @@
 // CS3339 Memory Visualization Project
 // json_serializer.h
-// This file converts our memory tracking data into JSON format
-// We're using JSON because it's easy to work with in JavaScript for our visualization
-// and it's a standard format we learned about in class
+//
+// Converts memory tracking data created by memory_tracker.h to JSON for use in the visualization (D3.js)
+// Uses timestamps to create timeline of events and memory state snapshots.
+//
+// Classes:
+// 	- JsonSerializer: Transforms memory tracking data into JSON output
+// 	- Different functions to format different data types into JSON
 
 #ifndef JSON_SERIALIZER_H
 #define JSON_SERIALIZER_H
