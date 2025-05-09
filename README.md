@@ -46,4 +46,28 @@ Memory management is one of those computer science concepts that are extremely i
 - Simple examples to demonstrate key memory concepts
 
 ## Build instructions
-// TODO
+
+### Quick Start with function_calls Example
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/Memory-Visualization.git
+   cd Memory-Visualization
+   ```
+
+2. Make the run script executable:
+   ```bash
+   chmod +x run_and_visualize.sh
+   ```
+
+3. Run the function_calls example:
+   ```bash
+   ./run_and_visualize.sh examples/function_calls.cpp
+   ```
+
+4. Open your web browser and navigate to:
+   ```
+   http://localhost:8000
+   ```
+
+The visualization will show you how memory is distributed, with color-coded memory blocks representing different variables and their states.
