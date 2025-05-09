@@ -13,19 +13,24 @@
 
 class HeapVisualization {
     constructor(containerId) {
+        // Get the container element and set up our drawing area
         this.container = d3.select(containerId);
         this.width = this.container.node().getBoundingClientRect().width;
         this.height = 400;
         this.margin = { top: 20, right: 20, bottom: 30, left: 40 };
         
+        // Create an SVG element to draw in
         this.svg = this.container.append('svg')
             .attr('width', this.width)
             .attr('height', this.height);
             
+        // Set up our scales for positioning elements
         this.setupScales();
     }
 
     setupScales() {
+        // Create scales to map data values to screen positions
+        // We learned about D3 scales in our visualization class
         this.x = d3.scaleLinear()
             .domain([0, 1])
             .range([this.margin.left, this.width - this.margin.right]);
@@ -40,14 +45,15 @@ class HeapVisualization {
 
         const blocks = data.memory_blocks;
         
-        // Update scales based on data
+        // Update our scales based on the data we have
         this.x.domain([0, d3.max(blocks, d => d.size)]);
         
-        // Join data with rectangles
+        // Join our data with the rectangles
+        // This is a D3 pattern we learned about
         const rects = this.svg.selectAll('rect')
             .data(blocks, d => d.address);
             
-        // Enter new blocks
+        // Add new rectangles for new memory blocks
         rects.enter()
             .append('rect')
             .attr('x', d => this.x(0))
@@ -58,20 +64,20 @@ class HeapVisualization {
             .attr('stroke', '#000')
             .attr('stroke-width', 1);
             
-        // Update existing blocks
+        // Update existing rectangles
         rects.transition()
             .duration(500)
             .attr('width', d => this.x(d.size) - this.x(0))
             .attr('fill', d => this.getBlockColor(d));
             
-        // Remove old blocks
+        // Remove rectangles for freed memory
         rects.exit()
             .transition()
             .duration(500)
             .attr('width', 0)
             .remove();
             
-        // Add labels
+        // Add labels to show block sizes
         const labels = this.svg.selectAll('text')
             .data(blocks, d => d.address);
             
@@ -90,6 +96,8 @@ class HeapVisualization {
     }
 
     getBlockColor(block) {
+        // Color coding for different memory states
+        // We learned about color theory in our UI design class
         if (block.is_deallocated) {
             return '#ffcdd2'; // Light red for deallocated
         } else if (this.isLeaked(block)) {
@@ -100,7 +108,8 @@ class HeapVisualization {
     }
 
     isLeaked(block) {
-        // Implement leak detection logic
-        return false; // Placeholder
+        // TODO: Implement leak detection
+        // This will be part of our next assignment
+        return false;
     }
 }
