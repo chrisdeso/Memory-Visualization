@@ -1,14 +1,7 @@
-// Memory Visualization CS3339 SP25 
+// CS3339 Memory Visualization Project
 // memory_wrappers.h
-//
-// Overrides default C++ memory operators (new, delete) to track heap allocation and deallocation
-//
-// General functionality:
-// 	- operator new: Tracks memory allocation
-// 	- operator delete: Tracks memory deallocation
-// 	- initMemoryTrack(): Starts tracking system
-// 	- trackerToJson: Generates JSON output for visualization
-//
+// This file overrides the C++ new and delete operators to track memory operations
+// We learned in class that we can override these operators to customize memory management
 
 #ifndef MEMORY_WRAPPERS_H
 #define MEMORY_WRAPPERS_H
@@ -17,17 +10,22 @@
 #include <new>
 #include "../core/memory_tracker.h"
 
-// Global memory tracker instance
+// Global pointer to our memory tracker
+// We need this to be accessible from the operator overrides
 extern MemoryTracker* g_memoryTracker;
 
-// Initialize memory tracking system
+// Function to start tracking memory operations
+// This should be called at the start of the program
 inline void initMemoryTrack() {
     if (!g_memoryTracker) {
         g_memoryTracker = new MemoryTracker();
     }
 }
 
-// Override global new operator
+// Override the global new operator
+// This gets called whenever someone uses 'new' in the program
+// We use malloc here because it's the basic memory allocation function
+// that new is built on top of
 void* operator new(std::size_t size) {
     void* ptr = std::malloc(size);
     if (g_memoryTracker) {
@@ -36,7 +34,10 @@ void* operator new(std::size_t size) {
     return ptr;
 }
 
-// Override global delete operator
+// Override the global delete operator
+// This gets called whenever someone uses 'delete' in the program
+// We use free here because it's the basic memory deallocation function
+// that delete is built on top of
 void operator delete(void* ptr) noexcept {
     if (g_memoryTracker) {
         g_memoryTracker->trackDeallocation(ptr);
@@ -44,7 +45,8 @@ void operator delete(void* ptr) noexcept {
     std::free(ptr);
 }
 
-// Generate JSON output for visualization
+// Function to get the current memory state as JSON
+// This will be used by our visualization to show memory usage
 inline std::string trackerToJson() {
     if (g_memoryTracker) {
         return g_memoryTracker->toJson();
