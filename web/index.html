@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Visualization Tool</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/heap-visualization.js"></script>
+    <script src="js/stack-visualization.js"></script>
+    <script src="js/timeline-navigation.js"></script>
+    <style>
+        :root {
+            --teal: #00bfae;
+            --teal-dark: #009688;
+            --stack-bg: #f8bbd0;
+            --stack-header: #e91e63;
+            --static-bg: #ffe0b2;
+            --static-header: #ff9800;
+            --heap-bg: #b3e5fc;
+            --heap-header: #039be5;
+            --step-bg: #e0f7fa;
+            --step-header: #0097a7;
+            --desc-bg: #fff8e1;
+            --desc-border: #ffe082;
+            --button-green: #00bfae;
+            --button-green-dark: #009688;
+            --button-gray: #bdbdbd;
+            --code-bg: #f5f5f5;
+            --code-border: #e0e0e0;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .main-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            background: var(--teal);
+            color: #fff;
+            width: 320px;
+            min-width: 260px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            padding: 24px 24px 12px 24px;
+            background: var(--teal);
+        }
+        .hamburger {
+            width: 32px;
+            height: 32px;
+            margin-right: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .hamburger span {
+            display: block;
+            height: 4px;
+            width: 24px;
+            background: #fff;
+            margin: 3px 0;
+            border-radius: 2px;
+        }
+        .sidebar-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .sidebar-section {
+            padding: 0 24px 24px 24px;
+        }
+        .sidebar-section .section-label {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+        .reset-btn {
+            background: var(--button-green);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 32px;
+            font-size: 1em;
+            font-weight: 600;
+            margin: 12px 0 16px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .reset-btn:hover {
+            background: var(--button-green-dark);
+        }
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-size: 1em;
+            white-space: pre;
+            margin-bottom: 0;
+        }
+        .highlight-line {
+            background: #ffe082;
+            display: block;
+            margin: 0 -16px;
+            padding: 0 16px;
+        }
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+        .step-bar {
+            background: var(--step-header);
+            color: #fff;
+            padding: 16px 32px;
+            font-size: 1.1em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        .step-desc {
+            background: var(--desc-bg);
+            border-left: 6px solid var(--desc-border);
+            padding: 12px 24px;
+            font-size: 1em;
+            color: #333;
+        }
+        .mem-section {
+            margin: 24px 32px 0 32px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .mem-header {
+            font-weight: 600;
+            padding: 10px 18px;
+            font-size: 1.1em;
+        }
+        .stack-section {
+            background: var(--stack-bg);
+        }
+        .stack-header {
+            background: var(--stack-header);
+            color: #fff;
+        }
+        .static-section {
+            background: var(--static-bg);
+        }
+        .static-header {
+            background: var(--static-header);
+            color: #fff;
+        }
+        .heap-section {
+            background: var(--heap-bg);
+        }
+        .heap-header {
+            background: var(--heap-header);
+            color: #fff;
+        }
+        .mem-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1em;
+        }
+        .mem-table th, .mem-table td {
+            padding: 6px 12px;
+            text-align: left;
+        }
+        .mem-table th {
+            font-weight: 600;
+        }
+        .mem-table tr {
+            border-bottom: 1px solid #fff;
+        }
+        .nav-btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin: 24px 32px 32px 32px;
+        }
+        .nav-btn {
+            border: none;
+            border-radius: 4px;
+            padding: 8px 28px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .nav-btn.prev {
+            background: var(--button-green);
+            color: #fff;
+        }
+        .nav-btn.next {
+            background: var(--button-gray);
+            color: #fff;
+        }
+        .nav-btn.prev:active, .nav-btn.prev:hover {
+            background: var(--button-green-dark);
+        }
+        .nav-btn.next:active, .nav-btn.next:hover {
+            background: #757575;
+        }
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; }
+            .sidebar { width: 100%; min-width: 0; }
+            .right-panel { padding: 0; }
+            .mem-section, .nav-btns { margin: 16px 8px; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="hamburger">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="sidebar-title">Memory Visualization Tool</span>
+        </div>
+        <div class="sidebar-section">
+            <div class="section-label">Basic function</div>
+            <button class="reset-btn" id="reset-btn">Reset</button>
+            <pre id="code-block" class="code-block"></pre>
+        </div>
+    </aside>
+    <main class="right-panel">
+        <div id="step-bar" class="step-bar"></div>
+        <div id="step-desc" class="step-desc"></div>
+        <div id="stack-section" class="mem-section stack-section"></div>
+        <div id="static-section" class="mem-section static-section"></div>
+        <div id="heap-section" class="mem-section heap-section"></div>
+        <div class="nav-btns">
+            <button class="nav-btn prev" id="prev-btn">Previous</button>
+            <button class="nav-btn next" id="next-btn">Next</button>
+        </div>
+    </main>
+</div>
+</body>
+</html> 
