@@ -9,6 +9,7 @@
     <script src="js/heap-visualization.js"></script>
     <script src="js/stack-visualization.js"></script>
     <script src="js/timeline-navigation.js"></script>
+    <script src="js/statics-visualization.js"></script>
     <style>
         :root {
             --teal: #00bfae;
@@ -239,9 +240,13 @@
     <main class="right-panel">
         <div id="step-bar" class="step-bar"></div>
         <div id="step-desc" class="step-desc"></div>
-        <div id="stack-section" class="mem-section stack-section"></div>
-        <div id="static-section" class="mem-section static-section"></div>
-        <div id="heap-section" class="mem-section heap-section"></div>
+        <div id="stack-section" class="mem-section stack-section">
+            <div id="stack"></div>
+            <div id="statics"></div>
+        </div>
+        <div id="heap-section" class="mem-section heap-section">
+            <div id="heap"></div>
+        </div>
         <div class="nav-btns">
             <button class="nav-btn prev" id="prev-btn">Previous</button>
             <button class="nav-btn next" id="next-btn">Next</button>

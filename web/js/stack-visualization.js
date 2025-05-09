@@ -10,114 +10,54 @@
 
 class StackVisualization {
     constructor(containerId) {
-        // Set up our drawing area
         this.container = d3.select(containerId);
-        this.width = this.container.node().getBoundingClientRect().width;
-        this.height = 400;
-        this.margin = { top: 20, right: 20, bottom: 30, left: 40 };
-        
-        // Create SVG for drawing
-        this.svg = this.container.append('svg')
-            .attr('width', this.width)
-            .attr('height', this.height);
-            
-        this.setupScales();
+        this.table = null;
+        this.header = null;
+        this.initTable();
     }
 
-    setupScales() {
-        // Create scales for positioning
-        // We use these to map data to screen coordinates
-        this.x = d3.scaleLinear()
-            .domain([0, 1])
-            .range([this.margin.left, this.width - this.margin.right]);
-            
-        this.y = d3.scaleLinear()
-            .domain([0, 1])
-            .range([this.height - this.margin.bottom, this.margin.top]);
+    initTable() {
+        this.container.html('');
+        this.header = this.container.append('div')
+            .attr('class', 'memory-region-header stack-header')
+            .text('Stack (function frames)');
+        this.table = this.container.append('table')
+            .attr('class', 'memory-table stack-table');
     }
 
     update(data) {
         if (!data) return;
-
-        const frames = data.stack_frames || [];
-        
-        // Update scale based on number of frames
-        this.y.domain([0, frames.length]);
-        
-        // Join data with frame groups
-        const frameGroups = this.svg.selectAll('.frame-group')
-            .data(frames, d => d.id);
-            
-        // Add new frames
-        const newFrames = frameGroups.enter()
-            .append('g')
-            .attr('class', 'frame-group');
-            
-        // Draw the frame rectangle
-        newFrames.append('rect')
-            .attr('x', this.margin.left)
-            .attr('y', (d, i) => this.y(i))
-            .attr('width', this.width - this.margin.left - this.margin.right)
-            .attr('height', 60)
-            .attr('fill', '#e3f2fd')  // Light blue background
-            .attr('stroke', '#2196f3') // Blue border
-            .attr('stroke-width', 2);
-            
-        // Add function name
-        newFrames.append('text')
-            .attr('x', this.margin.left + 10)
-            .attr('y', (d, i) => this.y(i) + 25)
-            .attr('font-size', '14px')
-            .text(d => d.function_name);
-            
-        // Update existing frames
-        frameGroups.select('rect')
-            .transition()
-            .duration(500)
-            .attr('y', (d, i) => this.y(i));
-            
-        frameGroups.select('text')
-            .transition()
-            .duration(500)
-            .attr('y', (d, i) => this.y(i) + 25);
-            
-        // Remove old frames
-        frameGroups.exit()
-            .transition()
-            .duration(500)
-            .attr('opacity', 0)
-            .remove();
-            
-        // Add variables to frames
+        const frames = data.stack || [];
+        // Clear table
+        this.table.html('');
+        if (frames.length === 0) {
+            this.table.append('tr')
+                .append('td')
+                .attr('colspan', 3)
+                .attr('class', 'empty-message')
+                .text('No stack frames');
+            return;
+        }
+        // Header row
+        const headerRow = this.table.append('tr');
+        headerRow.append('td').attr('class', 'name-col').text('Name');
+        headerRow.append('td').attr('class', 'addr-col').text('Address');
+        headerRow.append('td').attr('class', 'value-col').text('Value');
+        // Data rows
         frames.forEach((frame, i) => {
-            const variables = frame.variables || [];
-            const varGroup = this.svg.selectAll(`.var-group-${frame.id}`)
-                .data(variables, d => d.name);
-                
-            // Add new variables
-            const newVars = varGroup.enter()
-                .append('g')
-                .attr('class', `var-group-${frame.id}`);
-                
-            // Draw variable boxes
-            newVars.append('rect')
-                .attr('x', this.margin.left + 20)
-                .attr('y', (d, j) => this.y(i) + 40 + j * 25)
-                .attr('width', 100)
-                .attr('height', 20)
-                .attr('fill', '#bbdefb')  // Lighter blue for variables
-                .attr('stroke', '#1976d2') // Darker blue border
-                .attr('stroke-width', 1);
-                
-            // Add variable names and values
-            newVars.append('text')
-                .attr('x', this.margin.left + 25)
-                .attr('y', (d, j) => this.y(i) + 55 + j * 25)
-                .attr('font-size', '12px')
-                .text(d => `${d.name}: ${d.value}`);
-                
-            // Remove old variables
-            varGroup.exit().remove();
+            // Frame label row
+            const frameRow = this.table.append('tr');
+            frameRow.append('td')
+                .attr('colspan', 3)
+                .attr('style', 'font-weight:bold; background:#f8bbd0;')
+                .text(`${frame.function_name} frame`);
+            // Variables
+            (frame.variables || []).forEach(variable => {
+                const row = this.table.append('tr');
+                row.append('td').attr('class', 'name-col').text(variable.name);
+                row.append('td').attr('class', 'addr-col').text(variable.address || '');
+                row.append('td').attr('class', 'value-col').text(variable.value !== undefined ? variable.value : '');
+            });
         });
     }
 }

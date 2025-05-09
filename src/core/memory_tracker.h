@@ -13,40 +13,34 @@
 #include <chrono>
 #include <mutex>
 #include "../JSObjectNotation/json_serializer.h"
+#include <stack>
+#include <algorithm>
+#include "memory_block.h"
 
-// MemoryBlock class
-// This class keeps track of information about a single memory allocation
-// using chrono for timestamps because it's more precise than regular time functions
-// and it's what we learned about in class for handling time in C++
-class MemoryBlock {
-public:
-    // The actual memory address where the block is allocated
+extern bool g_tracking_enabled;
+
+struct VariableInfo {
+    std::string name;
     void* address;
-    
-    // How many bytes were allocated
-    size_t size;
-    
-    // When the memory was allocated
-    // Using system_clock because it's the standard way to get current time in C++
-    std::chrono::system_clock::time_point allocationTime;
-    
-    // Whether this memory has been freed
-    bool isDeallocated;
-    
-    // When the memory was freed (if it was)
-    std::chrono::system_clock::time_point deallocationTime;
+    std::string value; // store as string for easy serialization
+    bool isGlobal = false;
+    bool isStatic = false;
+};
 
-    // Constructor
-    // Takes the address and size of the allocated memory
-    // Sets up the initial state of the block
-    MemoryBlock(void* addr, size_t sz) 
-        : address(addr), 
-          size(sz), 
-          allocationTime(std::chrono::system_clock::now()),
-          isDeallocated(false) {
-        // The constructor initializes everything except deallocationTime
-        // because we don't know when it will be freed yet
-    }
+struct StackFrame {
+    std::string functionName;
+    std::vector<VariableInfo> locals;
+};
+
+struct StepSnapshot {
+    std::vector<std::string> code;
+    int highlight;
+    std::string step;
+    std::string desc;
+    std::vector<VariableInfo> globals;
+    std::vector<StackFrame> stackFrames;
+    std::vector<VariableInfo> statics;
+    std::string heapJson; // for now, use existing heap serialization
 };
 
 // MemoryTracker class
@@ -62,6 +56,10 @@ private:
     // We learned about mutexes in class for handling concurrent access
     std::mutex trackerMutex;
     JsonSerializer jsonSerializer;
+    std::vector<VariableInfo> globals;
+    std::vector<VariableInfo> statics;
+    std::stack<StackFrame> callStack;
+    std::vector<StepSnapshot> steps;
 
 public:
     // Default constructor
@@ -120,6 +118,42 @@ public:
 
     std::string toJson() const {
         return jsonSerializer.serializeMemoryState(memoryBlocks);
+    }
+
+    void pushFrame(const std::string& func) {
+        callStack.push(StackFrame{func, {}});
+    }
+    void popFrame() {
+        if (!callStack.empty()) callStack.pop();
+    }
+    void trackVar(const std::string& name, void* addr, const std::string& value) {
+        if (!callStack.empty())
+            callStack.top().locals.push_back(VariableInfo{name, addr, value, false, false});
+    }
+    void trackGlobal(const std::string& name, void* addr, const std::string& value) {
+        globals.push_back(VariableInfo{name, addr, value, true, false});
+    }
+    void trackStatic(const std::string& name, void* addr, const std::string& value) {
+        statics.push_back(VariableInfo{name, addr, value, false, true});
+    }
+    void snapshotStep(const std::vector<std::string>& code, int highlight, const std::string& step, const std::string& desc) {
+        bool was_tracking = g_tracking_enabled;
+        g_tracking_enabled = false;
+        StepSnapshot snap{code, highlight, step, desc, globals, {}, statics, toJson()};
+        g_tracking_enabled = was_tracking;
+        // Copy stack frames
+        std::stack<StackFrame> tmp = callStack;
+        std::vector<StackFrame> frames;
+        while (!tmp.empty()) { frames.push_back(tmp.top()); tmp.pop(); }
+        std::reverse(frames.begin(), frames.end());
+        snap.stackFrames = frames;
+        steps.push_back(snap);
+    }
+    const std::vector<StepSnapshot>& getSteps() const { return steps; }
+
+    // New: Serialize all steps as a JSON array for the frontend
+    std::string stepsToJson() const {
+        return jsonSerializer.serializeSteps(steps);
     }
 };
 

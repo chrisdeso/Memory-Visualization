@@ -1,3 +1,4 @@
+#include "../core/memory_block.h"
 // CS3339 Memory Visualization Project
 // json_serializer.h
 //
@@ -17,7 +18,6 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
-#include "../core/memory_tracker.h"
 
 class JsonSerializer {
 public:
@@ -55,6 +55,47 @@ public:
         ss << "  \"timestamp\": \"" << timeToString(std::chrono::system_clock::now()) << "\"\n";
         ss << "}";
         
+        return ss.str();
+    }
+
+    // New: Serialize a vector of StepSnapshot as an array of steps for the frontend
+    template<typename StepSnapshotT>
+    std::string serializeSteps(const std::vector<StepSnapshotT>& steps) const {
+        std::stringstream ss;
+        ss << "[\n";
+        for (size_t i = 0; i < steps.size(); ++i) {
+            const auto& step = steps[i];
+            ss << "  {\n";
+            ss << "    \"step\": \"" << step.step << "\",\n";
+            ss << "    \"desc\": \"" << step.desc << "\",\n";
+            // Stack
+            ss << "    \"stack\": [";
+            for (size_t j = 0; j < step.stackFrames.size(); ++j) {
+                const auto& frame = step.stackFrames[j];
+                ss << "{\"id\": " << j+1 << ", \"function_name\": \"" << frame.functionName << "\", \"variables\": [";
+                for (size_t k = 0; k < frame.locals.size(); ++k) {
+                    const auto& var = frame.locals[k];
+                    ss << "{\"name\": \"" << var.name << "\", \"value\": " << var.value << "}";
+                    if (k + 1 < frame.locals.size()) ss << ", ";
+                }
+                ss << "]}";
+                if (j + 1 < step.stackFrames.size()) ss << ", ";
+            }
+            ss << "],\n";
+            // Heap
+            ss << "    \"heap\": ";
+            ss << step.heapJson << ",\n";
+            // Statics
+            ss << "    \"statics\": [";
+            for (size_t j = 0; j < step.statics.size(); ++j) {
+                const auto& s = step.statics[j];
+                ss << "{\"name\": \"" << s.name << "\", \"value\": " << s.value << "}";
+                if (j + 1 < step.statics.size()) ss << ", ";
+            }
+            ss << "]\n  }";
+            if (i + 1 < steps.size()) ss << ",\n";
+        }
+        ss << "\n]";
         return ss.str();
     }
 

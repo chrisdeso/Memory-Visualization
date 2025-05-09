@@ -1,35 +1,19 @@
 // controller.js
-// Simple controller for interactive memory visualization
-// Handles code highlighting, step navigation, and memory section updates
+// Loads memory trace from trace.json and updates the visualization
 
-// Sample steps data (replace with real data as needed)
-const steps = [
-  {
-    code: [
-      "double x[3];",
-      "int *y;",
-      "void foo(int a) {",
-      "    y = malloc(3 * sizeof(int));",
-      "    int j;",
-      "    for (j = 1; j < 3; j++) {",
-      "        y[j] = 3 + a * x[j - 1];",
-      "    }",
-      "    bar(a);",
-      "}"
-    ],
-    highlight: 8, // line to highlight (0-based)
-    step: "Step 7: Function call to bar()",
-    desc: "The function bar() is called with the same parameter. A new stack frame is created.",
-    stack: `<div class='mem-header stack-header'>Stack (globals)</div><table class='mem-table'><tr><th>x[0]</th><td>0x7fff5fbff810</td><td>0.0</td></tr><tr><th>x[1]</th><td>0x7fff5fbff818</td><td>0.0</td></tr><tr><th>x[2]</th><td>0x7fff5fbff820</td><td>0.0</td></tr><tr><th>y</th><td>0x7fff5fbff828</td><td>0x55555576b2a0</td></tr></table>`,
-    static: `<div class='mem-header static-header'>Static data (function frames)</div><table class='mem-table'><tr><th colspan='3'>foo() frame</th></tr><tr><th>a</th><td>0x7fff5fbff7e0</td><td>5</td></tr><tr><th>j</th><td>0x7fff5fbff7dc</td><td>3</td></tr><tr><th colspan='3'>bar() frame</th></tr><tr><th>a</th><td>0x7fff5fbff7b0</td><td>5</td></tr></table>`,
-    heap: `<div class='mem-header heap-header'>Heap memory</div><table class='mem-table'><tr><th>y[0]</th><td>0x55555576b2a0</td><td>0</td></tr><tr><th>y[1]</th><td>0x55555576b2a4</td><td>3</td></tr><tr><th>y[2]</th><td>0x55555576b2a8</td><td>3</td></tr></table>`
-  }
-  // Add more steps as needed
-];
-
+let steps = [];
 let currentStep = 0;
 
 function renderStep(idx) {
+  if (!steps.length) {
+    document.getElementById('code-block').textContent = '';
+    document.getElementById('step-bar').textContent = 'No trace loaded.';
+    document.getElementById('step-desc').textContent = '';
+    document.getElementById('stack-section').innerHTML = '';
+    document.getElementById('static-section').innerHTML = '';
+    document.getElementById('heap-section').innerHTML = '';
+    return;
+  }
   const s = steps[idx];
   // Render code with highlight
   document.getElementById('code-block').innerHTML = s.code.map((line, i) =>
@@ -46,8 +30,25 @@ function renderStep(idx) {
   document.getElementById('heap-section').innerHTML = s.heap;
 }
 
+function loadTrace() {
+  fetch('trace.json')
+    .then(res => {
+      if (!res.ok) throw new Error('Trace file not found');
+      return res.json();
+    })
+    .then(data => {
+      steps = data.steps || [];
+      currentStep = 0;
+      renderStep(currentStep);
+    })
+    .catch(err => {
+      steps = [];
+      renderStep(0);
+      document.getElementById('step-bar').textContent = 'Error loading trace: ' + err.message;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Navigation
   document.getElementById('prev-btn').onclick = () => {
     if (currentStep > 0) { currentStep--; renderStep(currentStep); }
   };
@@ -57,6 +58,5 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('reset-btn').onclick = () => {
     currentStep = 0; renderStep(currentStep);
   };
-  // Initial render
-  renderStep(currentStep);
+  loadTrace();
 }); 
