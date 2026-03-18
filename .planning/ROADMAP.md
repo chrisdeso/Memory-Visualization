@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/5 | Not started | - |
+| 1. Foundation | 1/5 | In Progress|  |
 | 2. Interpreter | 0/6 | Not started | - |
 | 3. Pointer Visualization | 0/5 | Not started | - |
 | 4. Polish | 0/2 | Not started | - |
