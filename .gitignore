@@ -1,51 +1,14 @@
-# Build directories
-build/
-out/
-cmake-build-*/
-bin/
-lib/
-Debug/
-Release/
+# Dependencies
+node_modules/
 
-# CMake files
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-Makefile
-
-# C++ compiled files
-*.o
-*.obj
-*.exe
-*.out
-*.app
-*.so
-*.dylib
-*.dll
-*.a
-*.lib
-
-# Generated JSON files
-*.json
-!package.json
-!tsconfig.json
+# Build output
+dist/
 
 # IDE/Editor specific files
 .vscode/
 .idea/
 *.swp
 *.swo
-.vs/
-*.user
-*.suo
-*.ncb
-*.sdf
-*.opensdf
-*.VC.db
-*.VC.opendb
 *~
 
 # OS specific files
@@ -53,28 +16,9 @@ Makefile
 Thumbs.db
 .directory
 
-# Web-related files
-node_modules/
-bower_components/
-dist/
+# Logs
 npm-debug.log
 yarn-error.log
-web/lib/d3/
-
-# Testing
-Testing/
-CTestTestfile.cmake
-Testing/Temporary/
-
-# Generated documentation
-docs/html/
-docs/latex/
-docs/xml/
-
-# Dependency directories
-_deps/
-
-# Logs
 *.log
 logs/
 
@@ -89,4 +33,4 @@ tmp/
 *.orig
 
 # Custom
-memory_trace_*.json
+.planning/
