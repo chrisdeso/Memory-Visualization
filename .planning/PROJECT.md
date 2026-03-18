@@ -2,11 +2,11 @@
 
 ## What This Is
 
-An interactive browser-based tool that lets users write C/C++ code in a Monaco editor and watch memory allocation, stack frames, pointers, and registers come to life as they step through execution. Built as both a CS education tool and a portfolio showcase piece.
+An interactive browser-based tool that lets users write C/C++ code in a Monaco editor and watch memory allocation, stack frames, pointers, and registers come to life as they step through execution. Supports a modern C++ subset (classes, references, new/delete, basic STL). Built as both a CS education tool and a portfolio showcase piece.
 
 ## Core Value
 
-Users write real-looking C code, step through it, and see exactly what's happening in memory — stack, heap, and pointers — without needing any server or build step.
+Users write C/C++ code, step through it, and see exactly what's happening in memory — stack, heap, and pointers — without needing any server or build step.
 
 ## Requirements
 
@@ -17,7 +17,8 @@ Users write real-looking C code, step through it, and see exactly what's happeni
 ### Active
 
 - [ ] Monaco editor for writing C/C++ code in the browser
-- [ ] In-browser C interpreter/simulator that generates execution trace dynamically
+- [ ] In-browser C/C++ interpreter/simulator that generates execution trace dynamically
+- [ ] Modern C++ subset support: classes, references, new/delete, basic STL (vector, string)
 - [ ] Step-through execution: line-by-line and statement-by-statement modes
 - [ ] Stack frame visualization (function calls, local variables, return addresses)
 - [ ] Heap visualization (malloc/free blocks, simulated)
@@ -45,7 +46,8 @@ The project will eventually be hosted as a static page on the owner's personal w
 
 - **Runtime**: Browser-only — no server, no backend execution engine
 - **Hosting**: Static site compatible (personal website deployment)
-- **Execution model**: C interpreter must run in-browser (WASM or pure JS)
+- **Execution model**: C/C++ interpreter must run in-browser (WASM or pure JS)
+- **C++ scope**: Modern subset only — classes, references, new/delete, vector, string; no templates, no full STL
 - **Existing code**: Full replacement — not extending the current trace.json pipeline
 
 ## Key Decisions
