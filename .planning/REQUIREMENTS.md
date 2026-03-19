@@ -7,9 +7,9 @@
 
 ### Editor
 
-- [ ] **EDIT-01**: User can write C/C++ code in a Monaco editor with C/C++ syntax highlighting
-- [ ] **EDIT-02**: User sees the currently-executing line highlighted in the editor during stepping
-- [ ] **EDIT-03**: User sees error squiggles and diagnostics for parse/runtime errors
+- [x] **EDIT-01**: User can write C/C++ code in a Monaco editor with C/C++ syntax highlighting
+- [x] **EDIT-02**: User sees the currently-executing line highlighted in the editor during stepping
+- [x] **EDIT-03**: User sees error squiggles and diagnostics for parse/runtime errors
 - [ ] **EDIT-04**: User can load a preloaded example program from a dropdown
 
 ### Execution
@@ -67,9 +67,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EDIT-01 | Phase 1 | Pending |
-| EDIT-02 | Phase 1 | Pending |
-| EDIT-03 | Phase 1 | Pending |
+| EDIT-01 | Phase 1 | Complete |
+| EDIT-02 | Phase 1 | Complete |
+| EDIT-03 | Phase 1 | Complete |
 | EDIT-04 | Phase 4 | Pending |
 | EXEC-01 | Phase 2 | Pending |
 | EXEC-02 | Phase 2 | Pending |

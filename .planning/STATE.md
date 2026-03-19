@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md (ExecutionSnapshot schema, demoTrace fixture, ExecutionState model)
-last_updated: "2026-03-18T20:42:11.879Z"
+stopped_at: Completed 01-04-PLAN.md (EditorPanel Monaco wrapper with cpp mode, line decorations, error markers)
+last_updated: "2026-03-19T15:48:18.730Z"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -24,26 +24,26 @@ See: .planning/PROJECT.md (updated 2026-03-18)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
-- Average duration: 3 min
-- Total execution time: 0.10 hours
+- Total plans completed: 4
+- Average duration: 5 min
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 2/5 completed | 6 min | 3 min |
+| 01-foundation | 4/5 completed | 21 min | 5 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (4 min), 01-02 (2 min)
-- Trend: fast execution, schema-only tasks
+- Last 5 plans: 01-01 (4 min), 01-02 (2 min), 01-03 (3 min), 01-04 (12 min)
+- Trend: fast execution, UI components taking slightly longer than schema tasks
 
 *Updated after each plan completion*
 
@@ -61,6 +61,8 @@ Recent decisions affecting current work:
 - [01-01]: Used ESM/CJS interop shim for vite-plugin-monaco-editor default export
 - [Phase 01-02]: ExecutionSnapshot uses flat integer addresses (not JS object references) — load-bearing for interpreter and panel rendering
 - [Phase 01-02]: ExecutionState uses listener array pattern (onChange), not EventEmitter — zero dependencies, synchronous, testable
+- [Phase 01-04]: EditorPanel.highlightLine uses deltaDecorations with stored IDs pattern (prevents stale decoration accumulation on repeated calls)
+- [Phase 01-04]: setErrors accepts optional col field (col?: number) with ?? 1 fallback — more precise than fixed column 1 for interpreter error positioning
 
 ### Pending Todos
 
@@ -73,6 +75,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T20:42:11.878Z
-Stopped at: Completed 01-02-PLAN.md (ExecutionSnapshot schema, demoTrace fixture, ExecutionState model)
+Last session: 2026-03-19T15:48:00Z
+Stopped at: Completed 01-04-PLAN.md (EditorPanel Monaco wrapper with cpp mode, line decorations, error markers)
 Resume file: None
