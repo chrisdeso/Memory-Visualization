@@ -40,9 +40,9 @@ describe('StackPanel', () => {
     panel = new StackPanel(container);
   });
 
-  it('Test 1: render([]) shows placeholder text "Write code and click Run"', () => {
+  it('Test 1: render([]) shows placeholder text', () => {
     panel.render([]);
-    expect(container.textContent).toContain('Write code and click Run');
+    expect(container.textContent).toContain('Step through to see stack frames');
   });
 
   it('Test 2: render(frames) creates one div per frame with frame name', () => {

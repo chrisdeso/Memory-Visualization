@@ -29,7 +29,7 @@ describe('HeapPanel', () => {
 
   it('Test 5: render([]) shows placeholder text', () => {
     panel.render([]);
-    expect(container.textContent).toContain('Write code and click Run');
+    expect(container.textContent).toContain('Step through to see heap allocations');
   });
 
   it('Test 6: render(blocks) creates one div per heap block with hex address', () => {

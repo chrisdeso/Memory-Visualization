@@ -8,7 +8,7 @@ export class EditorPanel {
     this.editor = monaco.editor.create(container, {
       value: initialCode,
       language: 'cpp',
-      theme: 'vs-dark',
+      theme: 'vs',
       fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
       fontSize: 14,
       lineNumbers: 'on',

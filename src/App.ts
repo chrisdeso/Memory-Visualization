@@ -50,10 +50,9 @@ export class App {
     const registersContent = root.querySelector('#registers-content') as HTMLElement;
 
     // Sample C code that matches the fixture trace
-    const sampleCode = `#include <stdio.h>
-#include <stdlib.h>
+    // Line numbers match fixture trace: line 1=main(){, line 2=blank, line 3=x=42, etc.
+    const sampleCode = `int main() {
 
-int main() {
     int x = 42;
     int *p = (int*)malloc(16);
     *p = 100;

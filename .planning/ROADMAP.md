@@ -12,7 +12,7 @@ Starting from a codebase that reads a static `trace.json`, this project delivers
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Vite + TypeScript scaffold, Monaco editor, ExecutionSnapshot schema, D3 panels rendering from fixture trace
+- [x] **Phase 1: Foundation** - Vite + TypeScript scaffold, Monaco editor, ExecutionSnapshot schema, D3 panels rendering from fixture trace (completed 2026-03-19)
 - [ ] **Phase 2: Interpreter** - In-browser C/C++ interpreter in Web Worker, full execution control, trace generation
 - [ ] **Phase 3: Pointer Visualization** - SVG pointer arrow overlay, memory leak highlighting, step diff display
 - [ ] **Phase 4: Polish** - Curated example programs, portfolio-grade visual finish
@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 4/5 | In Progress|  |
+| 1. Foundation | 5/5 | Complete   | 2026-03-19 |
 | 2. Interpreter | 0/6 | Not started | - |
 | 3. Pointer Visualization | 0/5 | Not started | - |
 | 4. Polish | 0/2 | Not started | - |

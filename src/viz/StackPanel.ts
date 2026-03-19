@@ -18,7 +18,7 @@ export class StackPanel {
         .attr('class', 'stack-placeholder')
         .style('color', 'var(--color-text-muted)')
         .style('padding', '12px')
-        .text('Write code and click Run');
+        .text('Step through to see stack frames');
       return;
     }
 

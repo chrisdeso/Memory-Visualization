@@ -104,4 +104,13 @@ export const demoTrace: ExecutionSnapshot[] = [
     ],
     registers: { pc: 6, sp: 0x7fff0000 },
   },
+  {
+    step: 5,
+    lineNumber: 7,
+    description: 'return 0 — main() exits, stack frame popped',
+    stack: [],
+    heap: [],
+    pointers: [],
+    registers: { pc: 7, sp: 0x7fffffff },
+  },
 ];

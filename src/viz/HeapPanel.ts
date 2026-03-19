@@ -24,7 +24,7 @@ export class HeapPanel {
         .attr('class', 'heap-placeholder')
         .style('color', 'var(--color-text-muted)')
         .style('padding', '12px')
-        .text('Write code and click Run');
+        .text('Step through to see heap allocations');
       return;
     }
 

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-03-PLAN.md (StackPanel, HeapPanel, RegistersPanel D3 viz panels)
-last_updated: "2026-03-19T15:53:12.287Z"
+stopped_at: Completed 01-05-PLAN.md (App.ts integration, step controls, fixture trace wiring) - awaiting human-verify checkpoint
+last_updated: "2026-03-19T16:02:56.908Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -46,6 +46,7 @@ Plan: 4 of 5
 - Trend: fast execution, UI components taking slightly longer than schema tasks
 
 *Updated after each plan completion*
+| Phase 01-foundation P05 | 4 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,8 @@ Recent decisions affecting current work:
 - [Phase 01-04]: setErrors accepts optional col field (col?: number) with ?? 1 fallback — more precise than fixed column 1 for interpreter error positioning
 - [Phase 01-foundation]: div-based D3 rendering chosen over SVG for stack/heap panels (simpler text wrapping, CSS styling)
 - [Phase 01-foundation]: RegistersPanel.render accepts Registers|null to support empty state without overloading
+- [Phase 01-05]: App.ts uses innerHTML for DOM setup, integrates all components via state.onChange listener pattern
+- [Phase 01-05]: Heap status CSS variables added to :root so HeapPanel inline styles resolve correctly across themes
 
 ### Pending Todos
 
@@ -77,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T15:53:12.286Z
-Stopped at: Completed 01-03-PLAN.md (StackPanel, HeapPanel, RegistersPanel D3 viz panels)
+Last session: 2026-03-19T16:02:56.905Z
+Stopped at: Completed 01-05-PLAN.md (App.ts integration, step controls, fixture trace wiring) - awaiting human-verify checkpoint
 Resume file: None
