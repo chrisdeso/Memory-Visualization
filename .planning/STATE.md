@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-05-PLAN.md (App.ts integration, step controls, fixture trace wiring) - awaiting human-verify checkpoint
-last_updated: "2026-03-19T16:02:56.908Z"
+stopped_at: Completed 01-05-PLAN.md — Phase 1 foundation complete, all plans 01-01 through 01-05 done
+last_updated: "2026-03-19T16:16:41.952Z"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -23,30 +23,30 @@ See: .planning/PROJECT.md (updated 2026-03-18)
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Plan: 4 of 5
+Phase: 01 (foundation) — COMPLETE
+Plan: 5 of 5
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 4
-- Average duration: 5 min
-- Total execution time: 0.33 hours
+- Total plans completed: 5
+- Average duration: 7 min
+- Total execution time: 0.58 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 4/5 completed | 21 min | 5 min |
+| 01-foundation | 5/5 completed | 41 min | 8 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (4 min), 01-02 (2 min), 01-03 (3 min), 01-04 (12 min)
-- Trend: fast execution, UI components taking slightly longer than schema tasks
+- Last 5 plans: 01-01 (4 min), 01-02 (2 min), 01-03 (3 min), 01-04 (12 min), 01-05 (20 min)
+- Trend: fast execution, integration and browser-verified plans take longer than schema/component tasks
 
 *Updated after each plan completion*
-| Phase 01-foundation P05 | 4 | 1 tasks | 3 files |
+| Phase 01-foundation P05 | 20 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -68,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: RegistersPanel.render accepts Registers|null to support empty state without overloading
 - [Phase 01-05]: App.ts uses innerHTML for DOM setup, integrates all components via state.onChange listener pattern
 - [Phase 01-05]: Heap status CSS variables added to :root so HeapPanel inline styles resolve correctly across themes
+- [Phase 01-foundation]: Light theme (Monaco vs + CSS variables) chosen after browser verification — dark theme had readability issues with line highlight
+- [Phase 01-foundation]: demoTrace extended to 5 steps covering complete main() including return 0 — fixture line numbers now align with sample code
 
 ### Pending Todos
 
@@ -80,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T16:02:56.905Z
-Stopped at: Completed 01-05-PLAN.md (App.ts integration, step controls, fixture trace wiring) - awaiting human-verify checkpoint
+Last session: 2026-03-19T16:16:41.948Z
+Stopped at: Completed 01-05-PLAN.md — Phase 1 foundation complete, all plans 01-01 through 01-05 done
 Resume file: None
