@@ -18,6 +18,11 @@
 
   /* Active line highlight */
   --color-active-line-bg: rgba(255, 255, 0, 0.15);
+
+  /* Heap block status colors */
+  --color-heap-allocated: #56b6c2;
+  --color-heap-freed: #e06c75;
+  --color-heap-leaked: #e5c07b;
 }
 
 * {
@@ -94,7 +99,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
-  padding: 4px 0 8px 0;
+  padding: 4px 0 8px 8px;
   border-bottom: 1px solid #3c3c3c;
   margin-bottom: 8px;
 }
@@ -108,3 +113,45 @@ body {
   background: #ffff0066 !important;
   border-left: 3px solid yellow;
 }
+
+/* Toolbar title */
+.toolbar-title {
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+/* Step controls */
+.step-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.step-controls button {
+  background: #3c3c3c;
+  color: var(--color-text-primary);
+  border: 1px solid #555;
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.step-controls button:hover {
+  background: #505050;
+}
+
+.step-controls button:active {
+  background: #2a2a2a;
+}
+
+/* Step counter display */
+.step-display {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  min-width: 80px;
+}
+
