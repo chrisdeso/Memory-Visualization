@@ -22,7 +22,7 @@ export const TYPE_SIZES: Record<string, number> = {
 };
 
 function getTypeSize(type: string): number {
-  if (type.includes('*') || type.includes('&')) return TYPE_SIZES.pointer;
+  if (type.includes('*') || type.includes('&')) return TYPE_SIZES.pointer ?? 4;
   return TYPE_SIZES[type] ?? 4;
 }
 
@@ -106,6 +106,7 @@ export class Memory {
       throw new Error('Out of memory: stack overflow into heap');
     }
     const frame = this.frames[this.frames.length - 1];
+    if (!frame) throw new Error('allocLocal called with no active frame (frames array empty)');
     frame.locals.push({ name, type, address: this.stackPointer });
     return this.stackPointer;
   }

@@ -67,7 +67,7 @@ describe('Memory - Stack Frames', () => {
     mem.pushFrame('main', 0);
     const frames = mem.getStackFrames();
     expect(frames).toHaveLength(1);
-    expect(frames[0].name).toBe('main');
+    expect(frames[0]!.name).toBe('main');
   });
 
   it('popFrame removes the top frame from getStackFrames()', () => {
@@ -76,7 +76,7 @@ describe('Memory - Stack Frames', () => {
     mem.popFrame();
     const frames = mem.getStackFrames();
     expect(frames).toHaveLength(1);
-    expect(frames[0].name).toBe('main');
+    expect(frames[0]!.name).toBe('main');
   });
 
   it('allocLocal returns stack-region address (within stack region)', () => {
@@ -90,8 +90,8 @@ describe('Memory - Stack Frames', () => {
     mem.pushFrame('main', 0);
     mem.pushFrame('foo', 1);
     const frames = mem.getStackFrames();
-    expect(frames[0].name).toBe('main');
-    expect(frames[1].name).toBe('foo');
+    expect(frames[0]!.name).toBe('main');
+    expect(frames[1]!.name).toBe('foo');
   });
 });
 
