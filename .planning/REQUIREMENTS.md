@@ -32,7 +32,7 @@
 
 ### UI / Visual Design
 
-- [x] **UI-01**: Application uses a dark theme with a professional dev-tool aesthetic
+- [x] **UI-01**: Application uses a light theme with a professional dev-tool aesthetic
 - [x] **UI-02**: Layout is side-by-side: Monaco editor on the left, memory visualization panels on the right
 - [x] **UI-03**: Memory state updates are instant (no animation lag during stepping)
 - [ ] **UI-04**: Overall visual design is polished enough to showcase on a personal portfolio site

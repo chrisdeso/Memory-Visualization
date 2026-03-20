@@ -27,12 +27,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. User can open the app and type C/C++ code in a Monaco editor with C/C++ syntax highlighting active
   2. User sees the currently-executing line highlighted in the editor when stepping through a fixture trace
   3. User sees parse/runtime error squiggles appear in the editor when invalid code is present
-  4. User sees stack frame, heap, statics, and registers panels rendered side-by-side with the editor on a dark dev-tool-style theme
+  4. User sees stack frame, heap, statics, and registers panels rendered side-by-side with the editor on a light dev-tool-style theme
   5. Memory state updates instantly when stepping (no visible lag or animation delay)
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold: Vite + TypeScript + Monaco + D3, dark theme CSS, static build pipeline
+- [ ] 01-01-PLAN.md — Project scaffold: Vite + TypeScript + Monaco + D3, light theme CSS, static build pipeline
 - [ ] 01-02-PLAN.md — ExecutionSnapshot schema, fixture trace, and ExecutionState model
 - [ ] 01-03-PLAN.md — D3 visualization panels (StackPanel, HeapPanel, RegistersPanel)
 - [ ] 01-04-PLAN.md — Monaco editor integration (C++ syntax, line decoration, error markers)
