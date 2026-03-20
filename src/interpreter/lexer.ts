@@ -60,7 +60,7 @@ export function tokenize(source: string): Token[] {
   }
 
   function advance(): string {
-    const ch = source[pos++];
+    const ch = source[pos++] ?? '';
     if (ch === '\n') {
       line++;
       col = 1;

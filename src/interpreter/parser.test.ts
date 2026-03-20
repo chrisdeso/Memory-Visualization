@@ -35,7 +35,7 @@ function wrapInMain(code: string): string {
 function firstStmt(source: string) {
   const prog = parse(source) as ProgramNode;
   const mainFn = prog.body[0] as FunctionDecl;
-  return mainFn.body.body[0];
+  return mainFn.body.body[0]!;
 }
 
 describe('Parser - Basic declarations', () => {
@@ -69,8 +69,8 @@ describe('Parser - Basic declarations', () => {
     const prog = parse(wrapInMain('int x = 5;\nint y = x + 3;')) as ProgramNode;
     const main = prog.body[0] as FunctionDecl;
     expect(main.body.body.length).toBe(2);
-    expect(main.body.body[0].kind).toBe('VarDecl');
-    expect(main.body.body[1].kind).toBe('VarDecl');
+    expect(main.body.body[0]!.kind).toBe('VarDecl');
+    expect(main.body.body[1]!.kind).toBe('VarDecl');
     const y = main.body.body[1] as VarDecl;
     expect(y.name).toBe('y');
     const init = y.init as BinaryExpr;
@@ -80,7 +80,7 @@ describe('Parser - Basic declarations', () => {
 
   it('parses global variable declaration at top level', () => {
     const prog = parse('int x = 5;') as ProgramNode;
-    expect(prog.body[0].kind).toBe('VarDecl');
+    expect(prog.body[0]!.kind).toBe('VarDecl');
   });
 });
 
@@ -123,8 +123,8 @@ describe('Parser - Control flow', () => {
     const prog = parse(wrapInMain('while (1) { break; continue; }')) as ProgramNode;
     const main = prog.body[0] as FunctionDecl;
     const ws = main.body.body[0] as WhileStmt;
-    expect(ws.body.body[0].kind).toBe('BreakStmt');
-    expect(ws.body.body[1].kind).toBe('ContinueStmt');
+    expect(ws.body.body[0]!.kind).toBe('BreakStmt');
+    expect(ws.body.body[1]!.kind).toBe('ContinueStmt');
   });
 });
 
@@ -223,12 +223,12 @@ describe('Parser - Pointer operations', () => {
 describe('Parser - Classes', () => {
   it('parses class with public member', () => {
     const prog = parse('class Foo { public: int x; };') as ProgramNode;
-    expect(prog.body[0].kind).toBe('ClassDecl');
+    expect(prog.body[0]!.kind).toBe('ClassDecl');
     const cls = prog.body[0] as ClassDecl;
     expect(cls.name).toBe('Foo');
     expect(cls.members.length).toBe(1);
-    expect(cls.members[0].access).toBe('public');
-    expect(cls.members[0].decl.kind).toBe('VarDecl');
+    expect(cls.members[0]!.access).toBe('public');
+    expect(cls.members[0]!.decl.kind).toBe('VarDecl');
   });
 
   it('parses class with constructor', () => {

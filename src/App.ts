@@ -3,7 +3,9 @@ import { ExecutionState } from './state/ExecutionState';
 import { StackPanel } from './viz/StackPanel';
 import { HeapPanel } from './viz/HeapPanel';
 import { RegistersPanel } from './viz/RegistersPanel';
-import { demoTrace } from './fixtures/demoTrace';
+import type { WorkerResult } from './interpreter/types';
+
+const WORKER_TIMEOUT_MS = 5000;
 
 export class App {
   private editor: EditorPanel;
@@ -18,6 +20,7 @@ export class App {
       <div class="toolbar">
         <span class="toolbar-title">Memory Visualizer</span>
         <div class="step-controls">
+          <button id="btn-run" title="Run program">Run &#9654;</button>
           <button id="btn-reset" title="Reset">Reset</button>
           <button id="btn-back" title="Step Back">&larr; Back</button>
           <button id="btn-forward" title="Step Forward">Forward &rarr;</button>
@@ -27,6 +30,7 @@ export class App {
       <div class="main-layout">
         <div class="editor-pane" id="editor-container"></div>
         <div class="viz-pane">
+          <div id="error-banner" class="error-banner" style="display: none;"></div>
           <div class="stack-panel" id="stack-panel">
             <div class="panel-header" style="border-left: 3px solid var(--color-stack-border)">Stack</div>
             <div id="stack-content"></div>
@@ -49,12 +53,13 @@ export class App {
     const heapContent = root.querySelector('#heap-content') as HTMLElement;
     const registersContent = root.querySelector('#registers-content') as HTMLElement;
 
-    // Sample C code that matches the fixture trace
-    // Line numbers match fixture trace: line 1=main(){, line 2=blank, line 3=x=42, etc.
-    const sampleCode = `int main() {
+    // Sample C code for the editor
+    const sampleCode = `#include <iostream>
 
+int main() {
     int x = 42;
-    int *p = (int*)malloc(16);
+    int y = x + 8;
+    int *p = (int*)malloc(sizeof(int));
     *p = 100;
     free(p);
     return 0;
@@ -84,18 +89,92 @@ export class App {
     });
 
     // Wire step control buttons
+    root.querySelector('#btn-run')?.addEventListener('click', () => this.runProgram());
     root.querySelector('#btn-forward')?.addEventListener('click', () => this.state.stepForward());
     root.querySelector('#btn-back')?.addEventListener('click', () => this.state.stepBackward());
     root.querySelector('#btn-reset')?.addEventListener('click', () => this.state.reset());
+  }
 
-    // Load fixture trace
-    this.state.load(demoTrace);
+  private runProgram(): void {
+    // Clear previous errors and error banner
+    this.editor.clearErrors();
+    this.hideErrorBanner();
+
+    // Get source code from editor
+    const source = this.editor.getValue();
+
+    // Create worker using new URL pattern (reliable cross-browser)
+    let terminated = false;
+    const worker = new Worker(
+      new URL('./interpreter/worker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    // Timeout guard — kills frozen workers (infinite loops)
+    const timer = setTimeout(() => {
+      terminated = true;
+      worker.terminate();
+      this.showErrorBanner('Execution timed out: possible infinite loop');
+    }, WORKER_TIMEOUT_MS);
+
+    // Handle result from worker
+    worker.onmessage = (e: MessageEvent<WorkerResult>) => {
+      if (terminated) return;
+      clearTimeout(timer);
+      worker.terminate();
+
+      if (e.data.type === 'trace') {
+        this.state.load(e.data.trace);
+      } else {
+        // Error with partial trace — show banner, load partial trace for stepping
+        this.showErrorBanner(e.data.message);
+        if (e.data.partialTrace.length > 0) {
+          this.state.load(e.data.partialTrace);
+        }
+        // Highlight error line in editor if message contains line number
+        const lineMatch = e.data.message.match(/line (\d+)/i);
+        if (lineMatch && lineMatch[1] !== undefined) {
+          const line = parseInt(lineMatch[1], 10);
+          this.editor.setErrors([{ line, message: e.data.message }]);
+        }
+      }
+    };
+
+    // Handle worker crash (uncaught error inside worker)
+    worker.onerror = (err) => {
+      if (terminated) return;
+      clearTimeout(timer);
+      worker.terminate();
+      this.showErrorBanner(err.message || 'Worker error');
+    };
+
+    // Send source to worker
+    worker.postMessage({ source });
+  }
+
+  private showErrorBanner(message: string): void {
+    const banner = document.getElementById('error-banner');
+    if (banner) {
+      banner.textContent = message;
+      banner.style.display = 'block';
+    }
+  }
+
+  private hideErrorBanner(): void {
+    const banner = document.getElementById('error-banner');
+    if (banner) {
+      banner.style.display = 'none';
+    }
   }
 
   private updateStepDisplay(): void {
     const display = document.getElementById('step-display');
     if (display) {
-      display.textContent = `Step ${this.state.currentIndex + 1}/${this.state.stepCount}`;
+      if (this.state.stepCount === 0) {
+        display.textContent = 'Step 0/0';
+      } else {
+        display.textContent = `Step ${this.state.currentIndex + 1}/${this.state.stepCount}`;
+      }
     }
   }
 }

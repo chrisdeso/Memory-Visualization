@@ -61,11 +61,12 @@ let current: number;
 
 function peek(offset = 0): Token {
   const idx = current + offset;
-  return idx < tokens.length ? tokens[idx] : tokens[tokens.length - 1];
+  const t = idx < tokens.length ? tokens[idx] : tokens[tokens.length - 1];
+  return t!;
 }
 
 function advance(): Token {
-  const t = tokens[current];
+  const t = tokens[current]!;
   if (current < tokens.length - 1) current++;
   return t;
 }
@@ -165,7 +166,7 @@ function parseType(): TypeNode {
       }
     }
     // Take first part (before comma if any)
-    templateParam = tpStr.split(',')[0].trim();
+    templateParam = (tpStr.split(',')[0] ?? '').trim();
   }
 
   let isPointer = false;
@@ -583,6 +584,7 @@ function parseUnary(): ASTNode {
 
 function isTypeTokenAt(idx: number): boolean {
   const t = tokens[idx];
+  if (!t) return false;
   if (TYPE_KEYWORDS.has(t.type)) return true;
   if (t.type === TokenType.Std) return true;
   if (t.type === TokenType.Identifier) {
@@ -600,9 +602,9 @@ function isCastLookAhead(): boolean {
   const t = tokens[i];
 
   // (const ...) or (int) or (void*) etc.
-  if (t.type === TokenType.Const) i++;
+  if (t && t.type === TokenType.Const) i++;
   const t2 = tokens[i];
-  if (TYPE_KEYWORDS.has(t2?.type) && t2.type !== TokenType.Const) {
+  if (t2 !== undefined && TYPE_KEYWORDS.has(t2.type) && t2.type !== TokenType.Const) {
     // Skip type
     i++;
     if (tokens[i]?.type === TokenType.Star) i++;
