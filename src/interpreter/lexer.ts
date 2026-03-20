@@ -234,6 +234,7 @@ export function tokenize(source: string): Token[] {
       case ',': tokens.push(makeToken(TokenType.Comma, ',', startLine, startCol)); break;
       case ':': tokens.push(makeToken(TokenType.Colon, ':', startLine, startCol)); break;
       case '|': tokens.push(makeToken(TokenType.PipePipe, '|', startLine, startCol)); break;
+      case '~': tokens.push(makeToken(TokenType.Tilde, '~', startLine, startCol)); break;
       default:
         throw new Error(`Unexpected character '${ch}' at line ${startLine}:${startCol}`);
     }

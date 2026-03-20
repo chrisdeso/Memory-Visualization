@@ -296,6 +296,22 @@ function parseVarOrArrayDecl(): ASTNode {
     return { kind: 'ArrayDecl', elementType: typeNode, name, size, init, line } as ArrayDecl;
   }
 
+  // Constructor call: ClassName varName(args); — direct-initialization syntax
+  if (check(TokenType.LParen)) {
+    advance(); // (
+    const args: ASTNode[] = [];
+    while (!check(TokenType.RParen) && !check(TokenType.EOF)) {
+      args.push(parseExpression());
+      if (!match(TokenType.Comma)) break;
+    }
+    expect(TokenType.RParen, "Expected ')' after constructor arguments");
+    expect(TokenType.Semicolon, "Expected ';' after variable declaration");
+    // Encode as VarDecl with a CallExpr init (callee is the type name)
+    const calleeId: IdentifierNode = { kind: 'Identifier', name: typeNode.base, line };
+    const initExpr: CallExpr = { kind: 'CallExpr', callee: calleeId, args, line };
+    return { kind: 'VarDecl', varType: typeNode, name, init: initExpr, line } as VarDecl;
+  }
+
   // Regular variable declaration
   let initExpr: ASTNode | undefined;
   if (check(TokenType.Equal)) {
@@ -943,11 +959,6 @@ function parseClass(): ClassDecl {
       continue;
     }
 
-    // Destructor: ~ClassName()
-    if (check(TokenType.Bang)) { // ~ is parsed as ! by the lexer... but ~ is not in our lexer
-      // Actually ~ is not a TokenType in our lexer — fall through
-    }
-
     // Member declaration
     const decl = parseClassMember(name);
     members.push({ access: currentAccess, decl });
@@ -970,9 +981,14 @@ function parseClassMember(className: string): ASTNode {
     return parseFunctionDeclRest(voidType, className, line);
   }
 
-  // Destructor: ~ClassName() — need to handle ~ as tilde
-  // The lexer doesn't have a tilde token, so we can't parse destructors this way
-  // Skip for now — handle if we see any unknown tokens
+  // Destructor: ~ClassName() — tilde token now supported
+  if (check(TokenType.Tilde)) {
+    const dtorLine = t.line;
+    advance(); // ~
+    const destructorName = expect(TokenType.Identifier, "Expected class name after '~'").value;
+    const voidType: TypeNode = { base: 'void', isPointer: false, isReference: false, isConst: false };
+    return parseFunctionDeclRest(voidType, `~${destructorName}`, dtorLine);
+  }
 
   // Check for type-based member (variable or method)
   if (isVarDeclStart() || isTypeToken()) {

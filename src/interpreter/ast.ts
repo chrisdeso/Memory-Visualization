@@ -49,6 +49,7 @@ export enum TokenType {
   PipePipe = 'PipePipe',
   Bang = 'Bang',
   Amp = 'Amp',
+  Tilde = 'Tilde',
   Arrow = 'Arrow',
   Dot = 'Dot',
   ColonColon = 'ColonColon',

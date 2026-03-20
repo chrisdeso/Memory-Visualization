@@ -4,6 +4,7 @@ import type { ExecutionSnapshot } from '../types/snapshot';
 import type {
   ASTNode,
   FunctionDecl,
+  ClassDecl,
   VarDecl,
   ArrayDecl,
   Assignment,
@@ -33,6 +34,16 @@ import type {
   NewExpr,
   TypeNode,
 } from './ast';
+import { StdLib, StdVector, StdString, StdArray } from './stdlib';
+
+// ─── Class Instance Runtime Type ──────────────────────────────────────────────
+
+interface ClassInstance {
+  className: string;
+  address: number;
+  members: Map<string, number>;  // member name -> address
+  isHeap: boolean;
+}
 
 // ─── Signal Classes ───────────────────────────────────────────────────────────
 
@@ -79,6 +90,10 @@ interface EvalContext {
   maxSteps: number;
   env: Environment;
   functions: Map<string, FunctionDecl>;
+  classes: Map<string, ClassDecl>;
+  classInstances: Map<number, ClassInstance>;  // address -> ClassInstance
+  stlObjects: Map<number, StdVector | StdString | StdArray>;  // address -> STL object
+  arrayBounds: Map<number, number>;  // base address -> element count
   currentLine: number;
 }
 
@@ -111,13 +126,28 @@ export function interpret(source: string): ExecutionSnapshot[] {
     maxSteps: 50000,
     env: new Environment(),
     functions: new Map(),
+    classes: new Map(),
+    classInstances: new Map(),
+    stlObjects: new Map(),
+    arrayBounds: new Map(),
     currentLine: 1,
   };
 
-  // First pass: collect all function declarations
+  // First pass: collect all function and class declarations
   for (const node of program.body) {
     if (node.kind === 'FunctionDecl') {
       ctx.functions.set(node.name, node);
+    }
+    if (node.kind === 'ClassDecl') {
+      ctx.classes.set(node.name, node);
+      // Also register class member functions
+      for (const member of node.members) {
+        if (member.decl.kind === 'FunctionDecl') {
+          const fn = member.decl;
+          // Register as ClassName::methodName for internal use
+          ctx.functions.set(`${node.name}::${fn.name}`, fn);
+        }
+      }
     }
   }
 
@@ -273,9 +303,171 @@ function evalStatement(node: ASTNode, ctx: EvalContext): void {
   }
 }
 
+// ─── Class Instance Helpers ───────────────────────────────────────────────────
+
+function allocClassInstance(
+  classDecl: ClassDecl,
+  baseAddress: number,
+  isHeap: boolean,
+  ctx: EvalContext
+): ClassInstance {
+  const members = new Map<string, number>();
+  let offset = 0;
+  for (const member of classDecl.members) {
+    if (member.decl.kind === 'VarDecl') {
+      const field = member.decl as VarDecl;
+      const fieldSize = typeSizeOf(field.varType);
+      const fieldAddr = baseAddress + offset;
+      members.set(field.name, fieldAddr);
+      ctx.memory.store(fieldAddr, 0); // zero-initialize
+      offset += Math.max(fieldSize, 4); // min alignment 4
+    }
+  }
+  const instance: ClassInstance = {
+    className: classDecl.name,
+    address: baseAddress,
+    members,
+    isHeap,
+  };
+  ctx.classInstances.set(baseAddress, instance);
+  return instance;
+}
+
+function invokeMethod(
+  fn: FunctionDecl,
+  instance: ClassInstance,
+  args: unknown[],
+  frameName: string,
+  ctx: EvalContext
+): unknown {
+  const returnAddr = fn.line;
+  ctx.memory.pushFrame(frameName, returnAddr);
+  ctx.env.push();
+
+  // Bind 'this' as a pseudo-variable pointing to the instance
+  const thisAddr = ctx.memory.allocLocal('this', 'ptr', 4);
+  ctx.env.set('this', thisAddr);
+  ctx.memory.store(thisAddr, instance.address);
+
+  // Make member variables directly accessible by name in scope
+  for (const [memberName, memberAddr] of instance.members) {
+    ctx.env.set(memberName, memberAddr);
+  }
+
+  // Bind parameters
+  for (let i = 0; i < fn.params.length; i++) {
+    const param = fn.params[i];
+    if (!param) continue;
+    const size = typeSizeOf(param.type);
+    const addr = ctx.memory.allocLocal(param.name, typeNodeToString(param.type), size);
+    ctx.env.set(param.name, addr);
+    const argVal = i < args.length ? args[i] : 0;
+    ctx.memory.store(addr, argVal);
+  }
+
+  ctx.trace.push(ctx.memory.captureSnapshot(
+    ctx.stepCount++,
+    fn.line,
+    `Enter ${frameName}`,
+    fn.line
+  ));
+
+  let returnValue: unknown = undefined;
+  try {
+    evalBlock(fn.body, ctx);
+  } catch (err) {
+    if (err instanceof ReturnSignal) {
+      returnValue = err.value;
+    } else {
+      ctx.env.pop();
+      ctx.memory.popFrame();
+      throw err;
+    }
+  }
+
+  ctx.env.pop();
+  ctx.memory.popFrame();
+  return returnValue;
+}
+
 // ─── Specific Statement Handlers ─────────────────────────────────────────────
 
 function evalVarDecl(node: VarDecl, ctx: EvalContext): void {
+  const typeName = node.varType.base;
+
+  // STL type: vector, string, array — store as STL object
+  if (StdLib.isStdType(typeName) && !node.varType.isPointer) {
+    const addr = ctx.memory.allocLocal(node.name, typeNodeToString(node.varType), 4);
+    ctx.env.set(node.name, addr);
+
+    let initialArg: unknown = '';
+    // For string: check for "= string_literal" init
+    if (typeName === 'string' && node.init !== undefined) {
+      initialArg = evalExpr(node.init, ctx);
+    }
+    // For vector/array: templateParam provides element type
+    const elementType = node.varType.templateParam ?? 'int';
+
+    let stlObj: StdVector | StdString | StdArray;
+    if (typeName === 'string') {
+      stlObj = new StdString(ctx.memory, typeof initialArg === 'string' ? initialArg : '');
+    } else if (typeName === 'vector') {
+      stlObj = new StdVector(ctx.memory, elementType);
+    } else {
+      // array<T, N> — size from templateParam second component or default 0
+      const parts = (node.varType.templateParam ?? '').split(',');
+      const arrSize = parseInt(parts[1]?.trim() ?? '0', 10) || 0;
+      stlObj = new StdArray(arrSize, elementType);
+    }
+
+    ctx.stlObjects.set(addr, stlObj);
+    ctx.memory.store(addr, addr); // store self-address as sentinel
+
+    // For string: display current value
+    const displayVal = stlObj instanceof StdString ? stlObj.toString() : `${typeName}<${elementType}>`;
+    ctx.trace.push(ctx.memory.captureSnapshot(
+      ctx.stepCount++,
+      node.line,
+      `Declare ${node.name}: ${displayVal}`,
+      node.line
+    ));
+    return;
+  }
+
+  // Class type (user-defined, non-pointer): stack allocation with constructor
+  if (!node.varType.isPointer && ctx.classes.has(typeName)) {
+    const classDecl = ctx.classes.get(typeName)!;
+    const addr = ctx.memory.allocLocal(node.name, typeName, 4);
+    ctx.env.set(node.name, addr);
+
+    // Compute constructor args from init (CallExpr wrapping constructor args)
+    const constructorArgs: unknown[] = [];
+    if (node.init !== undefined && node.init.kind === 'CallExpr') {
+      for (const arg of (node.init as CallExpr).args) {
+        constructorArgs.push(evalExpr(arg, ctx));
+      }
+    }
+
+    // Allocate instance (on "stack" — use the variable address as the base)
+    const instance = allocClassInstance(classDecl, addr, false, ctx);
+    ctx.memory.store(addr, addr); // store self-reference
+
+    // Call constructor if it exists
+    const ctorName = typeName;
+    const ctorFn = ctx.functions.get(`${typeName}::${ctorName}`);
+    if (ctorFn) {
+      invokeMethod(ctorFn, instance, constructorArgs, `${typeName}::${ctorName}`, ctx);
+    }
+
+    ctx.trace.push(ctx.memory.captureSnapshot(
+      ctx.stepCount++,
+      node.line,
+      `Declare ${node.name}: ${typeName}`,
+      node.line
+    ));
+    return;
+  }
+
   const size = typeSizeOf(node.varType);
   const addr = ctx.memory.allocLocal(node.name, typeNodeToString(node.varType), size);
   ctx.env.set(node.name, addr);
@@ -302,6 +494,7 @@ function evalArrayDecl(node: ArrayDecl, ctx: EvalContext): void {
 
   const addr = ctx.memory.allocLocal(node.name, typeNodeToString(node.elementType) + '[]', totalSize);
   ctx.env.set(node.name, addr);
+  ctx.arrayBounds.set(addr, count); // record bounds for out-of-bounds detection
 
   // Initialize elements
   if (node.init) {
@@ -340,6 +533,23 @@ function evalAssignment(node: Assignment, ctx: EvalContext): void {
 
 function evalCompoundAssignment(node: CompoundAssignment, ctx: EvalContext): void {
   const addr = evalLValue(node.target, ctx);
+
+  // STL string += : delegate to StdString.append
+  if (node.op === '+') {
+    const stlObj = ctx.stlObjects.get(addr);
+    if (stlObj instanceof StdString) {
+      const rhs = evalExpr(node.value, ctx);
+      stlObj.append(String(rhs));
+      ctx.trace.push(ctx.memory.captureSnapshot(
+        ctx.stepCount++,
+        node.line,
+        `string += "${formatVal(rhs)}"`,
+        node.line
+      ));
+      return;
+    }
+  }
+
   const current = ctx.memory.load(addr) as number;
   const rhs = evalExpr(node.value, ctx) as number;
   let result: number;
@@ -619,15 +829,55 @@ function evalUnaryExpr(node: UnaryExpr, ctx: EvalContext): unknown {
 }
 
 function evalCallExpr(node: CallExpr, ctx: EvalContext): unknown {
+  // Method call: obj.method(args) or ptr->method(args)
+  if (node.callee.kind === 'MemberExpr') {
+    const mem = node.callee as MemberExpr;
+    const methodName = mem.member;
+
+    // Get the object address
+    let objectAddr: number;
+    if (mem.arrow) {
+      objectAddr = toNumber(evalExpr(mem.object, ctx));
+    } else {
+      try {
+        objectAddr = evalLValue(mem.object, ctx);
+      } catch {
+        objectAddr = toNumber(evalExpr(mem.object, ctx));
+      }
+    }
+
+    // Evaluate method args
+    const args = node.args.map(arg => evalExpr(arg, ctx));
+
+    // STL method call
+    const stlObj = ctx.stlObjects.get(objectAddr);
+    if (stlObj) {
+      // Handle += for string specially
+      if (methodName === 'operator+=') {
+        const result = StdLib.callMethod(stlObj, 'operator+=', args, ctx.memory);
+        return result;
+      }
+      return StdLib.callMethod(stlObj, methodName, args, ctx.memory);
+    }
+
+    // Class instance method call
+    const instance = ctx.classInstances.get(objectAddr);
+    if (instance) {
+      const methodFn = ctx.functions.get(`${instance.className}::${methodName}`);
+      if (methodFn) {
+        return invokeMethod(methodFn, instance, args, `${instance.className}::${methodName}`, ctx);
+      }
+      return 0;
+    }
+
+    // Fallback — unknown method
+    return 0;
+  }
+
   // Get function name
   let funcName: string;
   if (node.callee.kind === 'Identifier') {
     funcName = (node.callee as IdentifierNode).name;
-  } else if (node.callee.kind === 'MemberExpr') {
-    // Method call — simple fallback
-    const mem = node.callee as MemberExpr;
-    funcName = `${evalExpr(mem.object, ctx)}.${mem.member}`;
-    return 0; // method calls not yet supported
   } else {
     return 0;
   }
@@ -655,6 +905,12 @@ function evalCallExpr(node: CallExpr, ctx: EvalContext): unknown {
       return 4; // fallback
     default:
       break;
+  }
+
+  // Class constructor call used in VarDecl init (ClassName p(args))
+  if (ctx.classes.has(funcName)) {
+    // This case is handled in evalVarDecl — shouldn't reach here
+    return 0;
   }
 
   // User-defined function
@@ -689,24 +945,85 @@ function evalSizeofExpr(node: SizeofExpr, ctx: EvalContext): unknown {
 }
 
 function evalNewExpr(node: NewExpr, ctx: EvalContext): unknown {
-  // Allocate heap block for the type
+  const typeName = node.typeName;
+
+  // Class type: allocate heap + run constructor
+  if (ctx.classes.has(typeName)) {
+    const classDecl = ctx.classes.get(typeName)!;
+
+    // Calculate size: sum of member sizes (min 4 bytes each)
+    let totalSize = 0;
+    for (const member of classDecl.members) {
+      if (member.decl.kind === 'VarDecl') {
+        const field = member.decl as VarDecl;
+        totalSize += Math.max(typeSizeOf(field.varType), 4);
+      }
+    }
+    if (totalSize === 0) totalSize = 4;
+
+    const baseAddress = ctx.memory.allocHeap(totalSize, typeName);
+    const instance = allocClassInstance(classDecl, baseAddress, true, ctx);
+
+    // Evaluate constructor args
+    const constructorArgs: unknown[] = node.args.map(a => evalExpr(a, ctx));
+
+    // Call constructor if exists
+    const ctorFn = ctx.functions.get(`${typeName}::${typeName}`);
+    if (ctorFn) {
+      invokeMethod(ctorFn, instance, constructorArgs, `${typeName}::${typeName}`, ctx);
+    }
+
+    return baseAddress;
+  }
+
+  // Primitive type
   const sizes: Record<string, number> = {
     int: 4, float: 4, double: 8, char: 1, bool: 1,
   };
-  const size = sizes[node.typeName] ?? 4;
-  return ctx.memory.allocHeap(size, `new ${node.typeName}`);
+  const size = sizes[typeName] ?? 4;
+  return ctx.memory.allocHeap(size, `new ${typeName}`);
 }
 
 function evalDeleteExpr(node: DeleteExpr, ctx: EvalContext): void {
   const addr = toNumber(evalExpr(node.operand, ctx));
   if (addr !== 0) {
+    // Call destructor if this is a class instance
+    const instance = ctx.classInstances.get(addr);
+    if (instance) {
+      const dtorFn = ctx.functions.get(`${instance.className}::~${instance.className}`);
+      if (dtorFn) {
+        invokeMethod(dtorFn, instance, [], `${instance.className}::~${instance.className}`, ctx);
+      }
+      ctx.classInstances.delete(addr);
+    }
     ctx.memory.freeHeap(addr);
   }
 }
 
 function evalArrayAccess(node: ArrayAccess, ctx: EvalContext): unknown {
-  const base = toNumber(evalExpr(node.array, ctx));
+  // For array variables, get the base address from env (lvalue), not the stored value.
+  // An array name in C decays to its own address — evalLValue gives us env address = array base.
+  let base: number;
+  try {
+    base = evalLValue(node.array, ctx);
+    // Only use lvalue if it's actually a known array base (bounds recorded)
+    if (!ctx.arrayBounds.has(base)) {
+      // Not a stack array — fall back to expr value (e.g., pointer subscript)
+      base = toNumber(evalExpr(node.array, ctx));
+    }
+  } catch {
+    base = toNumber(evalExpr(node.array, ctx));
+  }
   const idx = toNumber(evalExpr(node.index, ctx));
+
+  // Bounds check for known arrays
+  const count = ctx.arrayBounds.get(base);
+  if (count !== undefined) {
+    if (idx < 0 || idx >= count) {
+      throw runtimeError(`Array out-of-bounds: index ${idx} is out of range [0, ${count - 1}]`, ctx);
+    }
+  }
+
   const addr = base + idx * 4; // assume int size=4
   try {
     return ctx.memory.load(addr);
@@ -715,10 +1032,67 @@ function evalArrayAccess(node: ArrayAccess, ctx: EvalContext): unknown {
   }
 }
 
-function evalMemberExpr(node: MemberExpr, _ctx: EvalContext): unknown {
-  // Simplified — not yet implemented for full class support (Plan 04)
-  void node;
+function evalMemberExpr(node: MemberExpr, ctx: EvalContext): unknown {
+  // Get the object address
+  let objectAddr: number;
+  if (node.arrow) {
+    // ptr->member: object expression gives pointer value
+    objectAddr = toNumber(evalExpr(node.object, ctx));
+  } else {
+    // obj.member: object expression is an lvalue — get its address
+    try {
+      objectAddr = evalLValue(node.object, ctx);
+    } catch {
+      objectAddr = toNumber(evalExpr(node.object, ctx));
+    }
+  }
+
+  // Check if it's an STL object
+  const stlObj = ctx.stlObjects.get(objectAddr);
+  if (stlObj) {
+    // STL member access (size, empty — non-call reads)
+    if (node.member === 'size') return (stlObj as StdVector | StdString | StdArray).size();
+    if (node.member === 'empty') return (stlObj instanceof StdVector || stlObj instanceof StdString) ? (stlObj.empty() ? 1 : 0) : 0;
+    // For other members, return the method name as a sentinel (handled by CallExpr)
+    return 0;
+  }
+
+  // Check if it's a class instance
+  const instance = ctx.classInstances.get(objectAddr);
+  if (instance) {
+    const memberAddr = instance.members.get(node.member);
+    if (memberAddr !== undefined) {
+      try {
+        return ctx.memory.load(memberAddr);
+      } catch {
+        return 0;
+      }
+    }
+    return 0;
+  }
+
   return 0;
+}
+
+function evalMemberExprLValue(node: MemberExpr, ctx: EvalContext): number {
+  let objectAddr: number;
+  if (node.arrow) {
+    objectAddr = toNumber(evalExpr(node.object, ctx));
+  } else {
+    try {
+      objectAddr = evalLValue(node.object, ctx);
+    } catch {
+      objectAddr = toNumber(evalExpr(node.object, ctx));
+    }
+  }
+
+  const instance = ctx.classInstances.get(objectAddr);
+  if (instance) {
+    const memberAddr = instance.members.get(node.member);
+    if (memberAddr !== undefined) return memberAddr;
+  }
+
+  throw runtimeError(`Cannot take lvalue of member ${node.member}`, ctx);
 }
 
 // ─── LValue Evaluation ────────────────────────────────────────────────────────
@@ -743,9 +1117,25 @@ function evalLValue(node: ASTNode, ctx: EvalContext): number {
     }
     case 'ArrayAccess': {
       const aa = node as ArrayAccess;
-      const base = toNumber(evalExpr(aa.array, ctx));
+      // For stack arrays, array name in env IS the base address (lvalue)
+      let base: number;
+      try {
+        base = evalLValue(aa.array, ctx);
+        if (!ctx.arrayBounds.has(base)) {
+          base = toNumber(evalExpr(aa.array, ctx));
+        }
+      } catch {
+        base = toNumber(evalExpr(aa.array, ctx));
+      }
       const idx = toNumber(evalExpr(aa.index, ctx));
+      const count = ctx.arrayBounds.get(base);
+      if (count !== undefined && (idx < 0 || idx >= count)) {
+        throw runtimeError(`Array out-of-bounds: index ${idx} is out of range [0, ${count - 1}]`, ctx);
+      }
       return base + idx * 4;
+    }
+    case 'MemberExpr': {
+      return evalMemberExprLValue(node as MemberExpr, ctx);
     }
     default:
       throw runtimeError(`Cannot assign to expression of kind ${node.kind}`, ctx);

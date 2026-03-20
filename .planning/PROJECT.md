@@ -12,19 +12,21 @@ Users write C/C++ code, step through it, and see exactly what's happening in mem
 
 ### Validated
 
-(None yet — ship to validate)
+Validated in Phase 1: Foundation (2026-03-19)
+- [x] Monaco editor for writing C/C++ code in the browser (C++ syntax highlighting, line decoration, error markers)
+- [x] Stack frame visualization (function calls, local variables, return addresses)
+- [x] Heap visualization (malloc/free blocks, simulated hex addresses)
+- [x] Register/program state display (PC, SP)
+- [x] Side-by-side layout (editor left, visualization right)
+- [x] Light theme with professional dev-tool aesthetic (user preference, overrides initial dark theme plan)
+- [x] ExecutionSnapshot TypeScript schema — load-bearing contract for all downstream phases
 
 ### Active
 
-- [ ] Monaco editor for writing C/C++ code in the browser
 - [ ] In-browser C/C++ interpreter/simulator that generates execution trace dynamically
 - [ ] Modern C++ subset support: classes, references, new/delete, basic STL (vector, string)
 - [ ] Step-through execution: line-by-line and statement-by-statement modes
-- [ ] Stack frame visualization (function calls, local variables, return addresses)
-- [ ] Heap visualization (malloc/free blocks, simulated)
 - [ ] Pointer visualization (arrows from pointer variables to targets)
-- [ ] Register/program state display (PC, SP, simplified CPU state)
-- [ ] Side-by-side layout (editor left, visualization right)
 - [ ] Replace existing static trace.json approach entirely
 
 ### Out of Scope
@@ -54,10 +56,11 @@ The project will eventually be hosted as a static page on the owner's personal w
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Monaco editor | Industry-standard, syntax highlighting, familiar UX | — Pending |
-| Simulated C interpreter (browser) | No server dependency, portable, self-contained | — Pending |
-| Side-by-side layout | Code and memory visible simultaneously during stepping | — Pending |
-| Replace entirely (not extend) | Clean architecture, no legacy trace.json coupling | — Pending |
+| Monaco editor | Industry-standard, syntax highlighting, familiar UX | Shipped in Phase 1 — cpp mode, vs theme, line decorations, error markers |
+| Simulated C interpreter (browser) | No server dependency, portable, self-contained | Phase 2 |
+| Side-by-side layout | Code and memory visible simultaneously during stepping | Shipped in Phase 1 — editor left, panels right |
+| Replace entirely (not extend) | Clean architecture, no legacy trace.json coupling | Shipped in Phase 1 — legacy web/ deleted |
+| Light theme | User preference over original dark theme plan | Shipped in Phase 1 — white/grey palette, system sans-serif UI font, JetBrains Mono in editor |
 
 ---
-*Last updated: 2026-03-18 after initialization*
+*Last updated: 2026-03-19 — Phase 1 complete*
