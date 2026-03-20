@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-20T03:59:51.140Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-20T04:06:07.331Z"
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Plan: 2 of 6
 *Updated after each plan completion*
 | Phase 01-foundation P05 | 20 min | 2 tasks | 9 files |
 | Phase 02-interpreter P01 | 4 | 2 tasks | 3 files |
+| Phase 02-interpreter P02 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 02-01]: TokenType enum lives in ast.ts shared by lexer and parser — one source of truth, avoids circular imports
 - [Phase 02-01]: ASTNode is a discriminated union on kind literal string — TypeScript narrows automatically in switch statements
 - [Phase 02-01]: #include emits IncludeDirective token instead of being silently dropped — parser can handle or skip explicitly
+- [Phase 02-02]: isCastLookAhead() heuristic distinguishes C-style casts from grouped expressions by scanning ahead for typeKeyword + ')'
+- [Phase 02-02]: isVarDeclStart() uses Identifier Identifier lookahead to detect user-defined-type variable declarations vs expression statements
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T03:59:51.139Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-20T04:06:07.330Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
