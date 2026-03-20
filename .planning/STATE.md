@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-20T04:15:37.808Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-03-20T13:34:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-18)
 ## Current Position
 
 Phase: 02 (interpreter) — EXECUTING
-Plan: 2 of 6
+Plan: 4 of 6
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: 2 of 6
 | Phase 02-interpreter P01 | 4 | 2 tasks | 3 files |
 | Phase 02-interpreter P02 | 3 | 2 tasks | 2 files |
 | Phase 02-interpreter P03 | 9 | 2 tasks | 4 files |
+| Phase 02-interpreter P04 | 12 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 02-02]: isVarDeclStart() uses Identifier Identifier lookahead to detect user-defined-type variable declarations vs expression statements
 - [Phase 02-03]: Post-execution snapshot timing: snapshot pushed AFTER executing each statement so variables appear initialized on the initializing line
 - [Phase 02-03]: Signal classes (ReturnSignal, BreakSignal, ContinueSignal) thrown as exceptions to propagate control flow — simpler than explicit return threading
+- [Phase 02-04]: ClassInstance members bound directly into invokeMethod scope so constructor body assignments work without explicit this-> prefix
+- [Phase 02-04]: Array base address from evalLValue (env address = array base) not evalExpr (stored value = first element) — critical for bounds-checking stack arrays
 
 ### Pending Todos
 
