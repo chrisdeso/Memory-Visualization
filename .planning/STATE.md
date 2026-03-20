@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-03-20T13:34:00.000Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-03-20T18:46:44.095Z"
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 10
 ---
 
 # Project State
@@ -51,6 +51,7 @@ Plan: 4 of 6
 | Phase 02-interpreter P02 | 3 | 2 tasks | 2 files |
 | Phase 02-interpreter P03 | 9 | 2 tasks | 4 files |
 | Phase 02-interpreter P04 | 12 | 2 tasks | 4 files |
+| Phase 02-interpreter P05 | 8 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Recent decisions affecting current work:
 - [Phase 02-03]: Signal classes (ReturnSignal, BreakSignal, ContinueSignal) thrown as exceptions to propagate control flow — simpler than explicit return threading
 - [Phase 02-04]: ClassInstance members bound directly into invokeMethod scope so constructor body assignments work without explicit this-> prefix
 - [Phase 02-04]: Array base address from evalLValue (env address = array base) not evalExpr (stored value = first element) — critical for bounds-checking stack arrays
+- [Phase 02-interpreter]: Worker created fresh per Run click using new URL() pattern — avoids state leakage, makes terminate() unconditionally safe
+- [Phase 02-interpreter]: terminated flag in runProgram() guards onmessage against post-terminate race condition (Research Pitfall 3)
+- [Phase 02-interpreter]: App starts with empty state — demoTrace fixture removed, user must click Run to populate panels
 
 ### Pending Todos
 
@@ -95,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T04:15:37.806Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-03-20T18:46:44.091Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
