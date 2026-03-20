@@ -14,9 +14,9 @@
 
 ### Execution
 
-- [ ] **EXEC-01**: User can run the program and generate a full execution trace
-- [ ] **EXEC-02**: User can step forward one line at a time (line-by-line mode)
-- [ ] **EXEC-03**: User can step forward one statement at a time (statement mode)
+- [x] **EXEC-01**: User can run the program and generate a full execution trace
+- [x] **EXEC-02**: User can step forward one line at a time (line-by-line mode)
+- [x] **EXEC-03**: User can step forward one statement at a time (statement mode)
 - [ ] **EXEC-04**: User can step backward through previously visited states
 - [ ] **EXEC-05**: User can play through execution automatically with speed control
 - [ ] **EXEC-06**: Interpreter runs in a Web Worker so infinite loops do not freeze the browser
@@ -71,9 +71,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EDIT-02 | Phase 1 | Complete |
 | EDIT-03 | Phase 1 | Complete |
 | EDIT-04 | Phase 4 | Pending |
-| EXEC-01 | Phase 2 | Pending |
-| EXEC-02 | Phase 2 | Pending |
-| EXEC-03 | Phase 2 | Pending |
+| EXEC-01 | Phase 2 | Complete |
+| EXEC-02 | Phase 2 | Complete |
+| EXEC-03 | Phase 2 | Complete |
 | EXEC-04 | Phase 2 | Pending |
 | EXEC-05 | Phase 2 | Pending |
 | EXEC-06 | Phase 2 | Pending |
