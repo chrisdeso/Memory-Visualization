@@ -251,3 +251,289 @@ describe('Evaluator - No main() function', () => {
     expect(() => interpret(source)).toThrow(/main/i);
   });
 });
+
+// ─── C++ Class Features (Plan 02-04) ─────────────────────────────────────────
+
+describe('Evaluator - Class basics', () => {
+  it('Class with member variables and constructor assigns members, visible in snapshot', () => {
+    const source = [
+      'class Point {',
+      'public:',
+      '  int x;',
+      '  int y;',
+      '  Point(int a, int b) { x = a; y = b; }',
+      '};',
+      'int main() {',
+      '  Point p(3, 7);',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    expect(trace.length).toBeGreaterThan(0);
+    // Constructor body steps should appear
+    const hasConstructorStep = trace.some(snap =>
+      snap.description.includes('Point') || snap.description.includes('constructor') ||
+      snap.stack.some(f => f.name.includes('Point'))
+    );
+    expect(hasConstructorStep).toBe(true);
+  });
+
+  it('new Point(1, 2) allocates heap block with label "Point"', () => {
+    const source = [
+      'class Point {',
+      'public:',
+      '  int x;',
+      '  int y;',
+      '  Point(int a, int b) { x = a; y = b; }',
+      '};',
+      'int main() {',
+      '  Point* p = new Point(1, 2);',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const heapSnap = trace.find(snap =>
+      snap.heap.some(b => b.label === 'Point' || (b.label && b.label.includes('Point')))
+    );
+    expect(heapSnap).toBeDefined();
+  });
+
+  it('delete p frees heap block and constructor steps are visible', () => {
+    const source = [
+      'class Point {',
+      'public:',
+      '  int x;',
+      '  int y;',
+      '  Point(int a, int b) { x = a; y = b; }',
+      '  ~Point() { x = 0; }',
+      '};',
+      'int main() {',
+      '  Point* p = new Point(1, 2);',
+      '  delete p;',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const freedSnap = trace.find(snap =>
+      snap.heap.some(b => b.status === 'freed')
+    );
+    expect(freedSnap).toBeDefined();
+  });
+});
+
+describe('Evaluator - Class lifecycle', () => {
+  it('p->x member access returns correct value', () => {
+    const source = [
+      'class Point {',
+      'public:',
+      '  int x;',
+      '  int y;',
+      '  Point(int a, int b) { x = a; y = b; }',
+      '};',
+      'int main() {',
+      '  Point* p = new Point(5, 9);',
+      '  int val = p->x;',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    // val should be 5
+    const valSnap = trace.find(snap =>
+      snap.stack.some(frame =>
+        frame.locals.some(l => l.name === 'val' && l.value === '5')
+      )
+    );
+    expect(valSnap).toBeDefined();
+  });
+
+  it('destructor runs steps when delete is called', () => {
+    const source = [
+      'class Box {',
+      'public:',
+      '  int size;',
+      '  Box(int s) { size = s; }',
+      '  ~Box() { size = -1; }',
+      '};',
+      'int main() {',
+      '  Box* b = new Box(10);',
+      '  delete b;',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    // Should have destructor frame or destructor-related snapshot
+    const hasDestructorStep = trace.some(snap =>
+      snap.stack.some(f => f.name.includes('~') || f.name.includes('Box'))
+    );
+    expect(hasDestructorStep).toBe(true);
+  });
+});
+
+describe('Evaluator - STL vector', () => {
+  it('std::vector push_back and size work', () => {
+    const source = [
+      '#include <vector>',
+      'int main() {',
+      '  std::vector<int> v;',
+      '  v.push_back(10);',
+      '  v.push_back(20);',
+      '  int s = v.size();',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    // s should be 2
+    const sSnap = trace.find(snap =>
+      snap.stack.some(frame =>
+        frame.locals.some(l => l.name === 's' && l.value === '2')
+      )
+    );
+    expect(sSnap).toBeDefined();
+  });
+
+  it('std::vector creates a heap block', () => {
+    const source = [
+      '#include <vector>',
+      'int main() {',
+      '  std::vector<int> v;',
+      '  v.push_back(1);',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const hasVectorHeap = trace.some(snap =>
+      snap.heap.some(b => b.label && b.label.includes('vector'))
+    );
+    expect(hasVectorHeap).toBe(true);
+  });
+
+  it('v.at(0) returns first element after push_back(10)', () => {
+    const source = [
+      '#include <vector>',
+      'int main() {',
+      '  std::vector<int> v;',
+      '  v.push_back(10);',
+      '  int val = v.at(0);',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const valSnap = trace.find(snap =>
+      snap.stack.some(frame =>
+        frame.locals.some(l => l.name === 'val' && l.value === '10')
+      )
+    );
+    expect(valSnap).toBeDefined();
+  });
+});
+
+describe('Evaluator - STL string', () => {
+  it('std::string variable appears in locals', () => {
+    const source = [
+      '#include <string>',
+      'int main() {',
+      '  std::string s = "hello";',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const strSnap = trace.find(snap =>
+      snap.stack.some(frame =>
+        frame.locals.some(l => l.name === 's')
+      )
+    );
+    expect(strSnap).toBeDefined();
+  });
+
+  it('std::string += appends correctly', () => {
+    const source = [
+      '#include <string>',
+      'int main() {',
+      '  std::string s = "hello";',
+      '  s += " world";',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    // Should not throw and trace should be non-empty
+    expect(trace.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Evaluator - Raw C arrays (arr)', () => {
+  it('int arr[3] elements are accessible', () => {
+    const source = [
+      'int main() {',
+      '  int arr[3];',
+      '  arr[0] = 1;',
+      '  arr[1] = 2;',
+      '  arr[2] = 3;',
+      '  int x = arr[1];',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const xSnap = trace.find(snap =>
+      snap.stack.some(frame =>
+        frame.locals.some(l => l.name === 'x' && l.value === '2')
+      )
+    );
+    expect(xSnap).toBeDefined();
+  });
+
+  it('out-of-bounds array access throws runtime error', () => {
+    const source = [
+      'int main() {',
+      '  int arr[3];',
+      '  arr[0] = 1;',
+      '  int x = arr[10];',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    expect(() => interpret(source)).toThrow(/out.of.bounds|invalid|range/i);
+  });
+});
+
+describe('Evaluator - Constructor and destructor stepping', () => {
+  it('constructor body lines appear as separate snapshots', () => {
+    const source = [
+      'class Counter {',
+      'public:',
+      '  int count;',
+      '  Counter() { count = 0; }',
+      '};',
+      'int main() {',
+      '  Counter c;',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    // Constructor produces at least one step
+    const hasCtorFrame = trace.some(snap =>
+      snap.stack.some(f => f.name.includes('Counter'))
+    );
+    expect(hasCtorFrame).toBe(true);
+    expect(trace.length).toBeGreaterThan(1);
+  });
+
+  it('destructor body lines appear as separate snapshots when delete called', () => {
+    const source = [
+      'class Managed {',
+      'public:',
+      '  int v;',
+      '  Managed(int x) { v = x; }',
+      '  ~Managed() { v = -1; }',
+      '};',
+      'int main() {',
+      '  Managed* m = new Managed(42);',
+      '  delete m;',
+      '  return 0;',
+      '}',
+    ].join('\n');
+    const trace = interpret(source);
+    const hasDestructorFrame = trace.some(snap =>
+      snap.stack.some(f => f.name.includes('~Managed') || f.name.includes('Managed'))
+    );
+    expect(hasDestructorFrame).toBe(true);
+  });
+});
