@@ -140,10 +140,22 @@ export class Memory {
   // ─── Value Access ─────────────────────────────────────────────────────────
 
   store(address: number, value: unknown): void {
+    if (!this.isValidAddress(address)) {
+      throw new Error(
+        `Segmentation fault: write to invalid address 0x${address.toString(16)} — ` +
+        `value ${address} is not a valid pointer (did you forget to use malloc/new?)`
+      );
+    }
     this.values.set(address, value);
   }
 
   load(address: number): unknown {
+    if (!this.isValidAddress(address)) {
+      throw new Error(
+        `Segmentation fault: read from invalid address 0x${address.toString(16)} — ` +
+        `value ${address} is not a valid pointer (did you forget to use malloc/new?)`
+      );
+    }
     if (!this.values.has(address)) {
       throw new Error(`read from uninitialized memory at 0x${address.toString(16)}`);
     }

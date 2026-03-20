@@ -52,8 +52,8 @@ export class App {
           <div class="registers-panel" id="registers-panel">
             <div class="panel-header" style="border-left: 3px solid var(--color-register-border)">Registers</div>
             <div id="registers-content"></div>
+            <div id="syntax-ref" class="syntax-ref-container"></div>
           </div>
-          <div id="syntax-ref" class="syntax-ref-container"></div>
         </div>
       </div>
     `;
@@ -99,6 +99,14 @@ int main() {
         this.registersPanel.render(null);
         this.editor.clearHighlight();
         this.updateStepDisplay();
+      }
+    });
+
+    // Ctrl+S / Cmd+S triggers run
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        this.runProgram();
       }
     });
 

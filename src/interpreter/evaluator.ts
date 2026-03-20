@@ -437,7 +437,15 @@ function evalVarDecl(node: VarDecl, ctx: EvalContext): void {
   // Class type (user-defined, non-pointer): stack allocation with constructor
   if (!node.varType.isPointer && ctx.classes.has(typeName)) {
     const classDecl = ctx.classes.get(typeName)!;
-    const addr = ctx.memory.allocLocal(node.name, typeName, 4);
+    let classSize = 0;
+    for (const member of classDecl.members) {
+      if (member.decl.kind === 'VarDecl') {
+        const field = member.decl as VarDecl;
+        classSize += Math.max(typeSizeOf(field.varType), 4);
+      }
+    }
+    if (classSize === 0) classSize = 4;
+    const addr = ctx.memory.allocLocal(node.name, typeName, classSize);
     ctx.env.set(node.name, addr);
 
     // Compute constructor args from init (CallExpr wrapping constructor args)
