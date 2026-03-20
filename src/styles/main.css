@@ -166,6 +166,98 @@ body {
   background-color: #15803d;
 }
 
+/* Play button */
+#btn-play {
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+#btn-play:hover {
+  background-color: #1d4ed8;
+}
+
+/* Speed selector */
+#speed-select {
+  padding: 4px 8px;
+  border: 1px solid var(--color-text-muted);
+  border-radius: 4px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Syntax Reference Panel */
+.syntax-ref-container {
+  margin-top: 8px;
+}
+
+.syntax-ref-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--color-bg-toolbar);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+.syntax-ref-header:hover {
+  background: #e0e0e0;
+}
+
+.syntax-ref-arrow {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.syntax-ref-body {
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  padding: 8px 10px;
+  background: var(--color-bg-base);
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.syntax-ref-section {
+  margin-bottom: 8px;
+}
+
+.syntax-ref-section h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.syntax-ref-section code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-panel);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.syntax-ref-section.not-supported {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.syntax-ref-section.not-supported h4 {
+  color: var(--color-text-muted);
+}
+
 /* Error banner */
 .error-banner {
   background-color: #fef2f2;

@@ -3,6 +3,8 @@ import { ExecutionState } from './state/ExecutionState';
 import { StackPanel } from './viz/StackPanel';
 import { HeapPanel } from './viz/HeapPanel';
 import { RegistersPanel } from './viz/RegistersPanel';
+import { SyntaxReference } from './components/SyntaxReference';
+import { AutoPlayController } from './interpreter/AutoPlayController';
 import type { WorkerResult } from './interpreter/types';
 
 const WORKER_TIMEOUT_MS = 5000;
@@ -13,6 +15,8 @@ export class App {
   private stackPanel: StackPanel;
   private heapPanel: HeapPanel;
   private registersPanel: RegistersPanel;
+  private syntaxRef: SyntaxReference;
+  private autoPlay: AutoPlayController;
 
   constructor(root: HTMLElement) {
     // Build DOM structure
@@ -21,6 +25,12 @@ export class App {
         <span class="toolbar-title">Memory Visualizer</span>
         <div class="step-controls">
           <button id="btn-run" title="Run program">Run &#9654;</button>
+          <button id="btn-play" title="Auto-play">&#9654;&#9654; Play</button>
+          <select id="speed-select" title="Playback speed">
+            <option value="slow">Slow</option>
+            <option value="medium" selected>Medium</option>
+            <option value="fast">Fast</option>
+          </select>
           <button id="btn-reset" title="Reset">Reset</button>
           <button id="btn-back" title="Step Back">&larr; Back</button>
           <button id="btn-forward" title="Step Forward">Forward &rarr;</button>
@@ -43,6 +53,7 @@ export class App {
             <div class="panel-header" style="border-left: 3px solid var(--color-register-border)">Registers</div>
             <div id="registers-content"></div>
           </div>
+          <div id="syntax-ref" class="syntax-ref-container"></div>
         </div>
       </div>
     `;
@@ -52,6 +63,7 @@ export class App {
     const stackContent = root.querySelector('#stack-content') as HTMLElement;
     const heapContent = root.querySelector('#heap-content') as HTMLElement;
     const registersContent = root.querySelector('#registers-content') as HTMLElement;
+    const syntaxRefContainer = root.querySelector('#syntax-ref') as HTMLElement;
 
     // Sample C code for the editor
     const sampleCode = `#include <iostream>
@@ -70,6 +82,8 @@ int main() {
     this.stackPanel = new StackPanel(stackContent);
     this.heapPanel = new HeapPanel(heapContent);
     this.registersPanel = new RegistersPanel(registersContent);
+    this.syntaxRef = new SyntaxReference(syntaxRefContainer);
+    this.autoPlay = new AutoPlayController(this.state, () => this.updatePlayButton());
 
     // Wire state changes to panels and editor
     this.state.onChange((snapshot) => {
@@ -90,12 +104,37 @@ int main() {
 
     // Wire step control buttons
     root.querySelector('#btn-run')?.addEventListener('click', () => this.runProgram());
-    root.querySelector('#btn-forward')?.addEventListener('click', () => this.state.stepForward());
-    root.querySelector('#btn-back')?.addEventListener('click', () => this.state.stepBackward());
-    root.querySelector('#btn-reset')?.addEventListener('click', () => this.state.reset());
+    root.querySelector('#btn-play')?.addEventListener('click', () => this.autoPlay.togglePlay());
+    root.querySelector('#btn-forward')?.addEventListener('click', () => {
+      this.autoPlay.stopPlay();
+      this.state.stepForward();
+    });
+    root.querySelector('#btn-back')?.addEventListener('click', () => {
+      this.autoPlay.stopPlay();
+      this.state.stepBackward();
+    });
+    root.querySelector('#btn-reset')?.addEventListener('click', () => {
+      this.autoPlay.stopPlay();
+      this.state.reset();
+    });
+
+    const speedSelect = root.querySelector('#speed-select') as HTMLSelectElement | null;
+    speedSelect?.addEventListener('change', () => {
+      this.autoPlay.currentSpeed = speedSelect.value as 'slow' | 'medium' | 'fast';
+    });
+  }
+
+  private updatePlayButton(): void {
+    const btn = document.getElementById('btn-play');
+    if (btn) {
+      btn.innerHTML = this.autoPlay.isPlaying ? '&#9646;&#9646; Pause' : '&#9654;&#9654; Play';
+    }
   }
 
   private runProgram(): void {
+    // Stop auto-play before running
+    this.autoPlay.stopPlay();
+
     // Clear previous errors and error banner
     this.editor.clearErrors();
     this.hideErrorBanner();
