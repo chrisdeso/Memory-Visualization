@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-05-PLAN.md
-last_updated: "2026-03-20T18:46:44.095Z"
+stopped_at: Checkpoint 02-06-PLAN.md Task 3 (human-verify pending)
+last_updated: "2026-03-20T18:53:03.725Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -52,6 +52,7 @@ Plan: 4 of 6
 | Phase 02-interpreter P03 | 9 | 2 tasks | 4 files |
 | Phase 02-interpreter P04 | 12 | 2 tasks | 4 files |
 | Phase 02-interpreter P05 | 8 | 2 tasks | 8 files |
+| Phase 02-interpreter P06 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Recent decisions affecting current work:
 - [Phase 02-interpreter]: Worker created fresh per Run click using new URL() pattern — avoids state leakage, makes terminate() unconditionally safe
 - [Phase 02-interpreter]: terminated flag in runProgram() guards onmessage against post-terminate race condition (Research Pitfall 3)
 - [Phase 02-interpreter]: App starts with empty state — demoTrace fixture removed, user must click Run to populate panels
+- [Phase 02-interpreter]: AutoPlayController extracted as standalone class for DOM-independent unit testing with vi.useFakeTimers() and PlayableState interface for mock injection
+- [Phase 02-interpreter]: SyntaxReference placed in viz-pane below registers as collapsible panel — no fixed vertical space cost, keeps C++ reference near visualization context
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:46:44.091Z
-Stopped at: Completed 02-05-PLAN.md
+Last session: 2026-03-20T18:53:03.722Z
+Stopped at: Checkpoint 02-06-PLAN.md Task 3 (human-verify pending)
 Resume file: None

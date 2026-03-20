@@ -18,7 +18,7 @@
 - [x] **EXEC-02**: User can step forward one line at a time (line-by-line mode)
 - [x] **EXEC-03**: User can step forward one statement at a time (statement mode)
 - [x] **EXEC-04**: User can step backward through previously visited states
-- [ ] **EXEC-05**: User can play through execution automatically with speed control
+- [x] **EXEC-05**: User can play through execution automatically with speed control
 - [x] **EXEC-06**: Interpreter runs in a Web Worker so infinite loops do not freeze the browser
 - [x] **EXEC-07**: Interpreter supports a modern C++ subset: classes, objects, constructors/destructors, references, new/delete, and basic STL (vector, string)
 
@@ -75,7 +75,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXEC-02 | Phase 2 | Complete |
 | EXEC-03 | Phase 2 | Complete |
 | EXEC-04 | Phase 2 | Complete |
-| EXEC-05 | Phase 2 | Pending |
+| EXEC-05 | Phase 2 | Complete |
 | EXEC-06 | Phase 2 | Complete |
 | EXEC-07 | Phase 2 | Complete |
 | VIZ-01 | Phase 3 | Pending |
