@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-05-PLAN.md — Phase 1 foundation complete, all plans 01-01 through 01-05 done
-last_updated: "2026-03-19T16:32:12.431Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-20T03:59:51.140Z"
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 11
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,20 +19,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users write C code, step through it, and see exactly what's happening in memory — stack, heap, and pointers — without needing any server or build step.
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — interpreter
 
 ## Current Position
 
-Phase: 01 (foundation) — COMPLETE
-Plan: 5 of 5
+Phase: 02 (interpreter) — EXECUTING
+Plan: 2 of 6
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 7 min
-- Total execution time: 0.58 hours
+- Total execution time: 0.64 hours
 
 **By Phase:**
 
@@ -47,6 +47,7 @@ Plan: 5 of 5
 
 *Updated after each plan completion*
 | Phase 01-foundation P05 | 20 min | 2 tasks | 9 files |
+| Phase 02-interpreter P01 | 4 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ Recent decisions affecting current work:
 - [Phase 01-05]: Heap status CSS variables added to :root so HeapPanel inline styles resolve correctly across themes
 - [Phase 01-foundation]: Light theme (Monaco vs + CSS variables) chosen after browser verification — dark theme had readability issues with line highlight
 - [Phase 01-foundation]: demoTrace extended to 5 steps covering complete main() including return 0 — fixture line numbers now align with sample code
+- [Phase 02-01]: TokenType enum lives in ast.ts shared by lexer and parser — one source of truth, avoids circular imports
+- [Phase 02-01]: ASTNode is a discriminated union on kind literal string — TypeScript narrows automatically in switch statements
+- [Phase 02-01]: #include emits IncludeDirective token instead of being silently dropped — parser can handle or skip explicitly
 
 ### Pending Todos
 
@@ -82,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T16:16:41.948Z
-Stopped at: Completed 01-05-PLAN.md — Phase 1 foundation complete, all plans 01-01 through 01-05 done
+Last session: 2026-03-20T03:59:51.139Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None

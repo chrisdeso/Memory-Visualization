@@ -49,15 +49,15 @@ Plans:
   4. User can play through execution automatically and adjust the playback speed
   5. An infinite loop in user code does not freeze the browser tab (Web Worker timeout terminates it)
   6. User can write C++ code using classes, references, new/delete, and basic STL (vector, string) and have it execute correctly
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 02-01: C/C++ subset specification document and interpreter library evaluation (jscpp vs picoc WASM vs alternatives with C++ support)
-- [ ] 02-02: Lexer and parser for documented C subset
-- [ ] 02-03: Tree-walk evaluator with flat integer address space, malloc/free heap simulation
-- [ ] 02-04: Web Worker wrapper (postMessage protocol, step budget, timeout-terminate guard)
-- [ ] 02-05: Delta-based trace generation wired to ExecutionSnapshot schema
-- [ ] 02-06: Run/step/step-back/play controls wired end-to-end (editor -> Worker -> State Model -> Visualization)
+- [ ] 02-01-PLAN.md — AST node types and lexer (tokenizer) for C++ subset
+- [ ] 02-02-PLAN.md — Recursive-descent parser (Token[] -> AST)
+- [ ] 02-03-PLAN.md — Memory model and tree-walk evaluator for core C (variables, control flow, functions, pointers, malloc/free)
+- [ ] 02-04-PLAN.md — C++ extensions (classes, constructors/destructors, new/delete, STL vector/string/array)
+- [ ] 02-05-PLAN.md — Web Worker wrapper and App wiring (Run button, error banner, timeout guard)
+- [ ] 02-06-PLAN.md — Auto-play controls, speed presets, and in-app syntax reference panel
 
 ### Phase 3: Pointer Visualization
 **Goal**: Users can see SVG pointer arrows connecting pointer variables to their target memory locations, with memory leak highlighting and per-step change indicators making the C memory model visually unambiguous
@@ -99,6 +99,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-19 |
-| 2. Interpreter | 0/6 | Not started | - |
+| 2. Interpreter | 1/6 | In Progress|  |
 | 3. Pointer Visualization | 0/5 | Not started | - |
 | 4. Polish | 0/2 | Not started | - |
