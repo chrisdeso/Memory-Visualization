@@ -16,7 +16,7 @@ function makeContainer(): HTMLElement {
 const sampleFrames: StackFrame[] = [
   {
     name: 'main',
-    returnAddr: 0x7fff0000,
+    returnAddr: 0,
     locals: [
       { name: 'x', type: 'int', value: '42', address: 0x7fff0010 },
       { name: 'p', type: 'int*', value: '0x20000000', address: 0x7fff0008 },
@@ -69,5 +69,90 @@ describe('StackPanel', () => {
     panel.render(sampleFrames);
     const frameDivs = container.querySelectorAll('.stack-frame');
     expect(frameDivs.length).toBe(2);
+  });
+
+  it('Test 5: each .stack-frame has a top border (frame boundary divider)', () => {
+    panel.render(sampleFrames);
+    const frameDivs = container.querySelectorAll('.stack-frame');
+    expect(frameDivs.length).toBeGreaterThan(0);
+    frameDivs.forEach((div) => {
+      const style = (div as HTMLElement).style.borderTop;
+      expect(style).toBe('1px solid #d0d0d0');
+    });
+  });
+
+  it('Test 6: frame name label is uppercase and styled with stack-border color', () => {
+    panel.render(sampleFrames);
+    const nameLabels = container.querySelectorAll('.stack-frame-name');
+    expect(nameLabels.length).toBe(2);
+    nameLabels.forEach((label) => {
+      const el = label as HTMLElement;
+      expect(el.style.fontWeight).toBe('700');
+      expect(el.style.color).toBe('var(--color-stack-border)');
+      expect(el.style.textTransform).toBe('uppercase');
+    });
+  });
+
+  it('Test 7: non-main frame shows hex return address', () => {
+    panel.render(sampleFrames);
+    const returnAddrRows = container.querySelectorAll('.stack-return-addr');
+    // helper frame (returnAddr: 0x7fff0100) should show hex
+    const helperReturnRow = returnAddrRows[0]; // helper is reversed to top
+    expect(helperReturnRow.textContent).toContain('0x7fff0100');
+  });
+
+  it('Test 8: main frame shows dash for return address when returnAddr is 0', () => {
+    panel.render(sampleFrames);
+    const returnAddrRows = container.querySelectorAll('.stack-return-addr');
+    // main frame (returnAddr: 0) should show dash (em dash)
+    const mainReturnRow = returnAddrRows[1]; // main is at bottom (last in reversed)
+    expect(mainReturnRow.textContent).toContain('\u2014');
+  });
+
+  it('Test 9: each local variable row has data-address attribute matching v.address', () => {
+    panel.render(sampleFrames);
+    // x at 0x7fff0010
+    const xRow = container.querySelector('[data-address="' + String(0x7fff0010) + '"]');
+    expect(xRow).not.toBeNull();
+    // p at 0x7fff0008
+    const pRow = container.querySelector('[data-address="' + String(0x7fff0008) + '"]');
+    expect(pRow).not.toBeNull();
+    // n at 0x7fff0020
+    const nRow = container.querySelector('[data-address="' + String(0x7fff0020) + '"]');
+    expect(nRow).not.toBeNull();
+  });
+
+  it('Test 10: render(frames, prevFrames) highlights changed values with data-changed="true"', () => {
+    const prevFrames: StackFrame[] = [
+      {
+        name: 'main',
+        returnAddr: 0,
+        locals: [
+          { name: 'x', type: 'int', value: '10', address: 0x7fff0010 }, // was 10, now 42
+          { name: 'p', type: 'int*', value: '0x20000000', address: 0x7fff0008 }, // unchanged
+        ],
+      },
+    ];
+    panel.render(sampleFrames, prevFrames);
+    // x changed from 10 to 42 — should have data-changed="true"
+    const xRow = container.querySelector('[data-address="' + String(0x7fff0010) + '"]');
+    expect(xRow).not.toBeNull();
+    expect(xRow!.getAttribute('data-changed')).toBe('true');
+    // p unchanged — should NOT have data-changed
+    const pRow = container.querySelector('[data-address="' + String(0x7fff0008) + '"]');
+    expect(pRow).not.toBeNull();
+    expect(pRow!.getAttribute('data-changed')).toBeNull();
+  });
+
+  it('Test 11: render(frames) with no prevFrames does not set data-changed on any row', () => {
+    panel.render(sampleFrames);
+    const changedRows = container.querySelectorAll('[data-changed="true"]');
+    expect(changedRows.length).toBe(0);
+  });
+
+  it('Test 12: render(frames, []) with empty prevFrames does not set data-changed on any row', () => {
+    panel.render(sampleFrames, []);
+    const changedRows = container.querySelectorAll('[data-changed="true"]');
+    expect(changedRows.length).toBe(0);
   });
 });
