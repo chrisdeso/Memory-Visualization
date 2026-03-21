@@ -24,7 +24,7 @@
 
 ### Visualization
 
-- [ ] **VIZ-01**: User sees a stack frames panel showing the current call stack and local variables
+- [x] **VIZ-01**: User sees a stack frames panel showing the current call stack and local variables
 - [x] **VIZ-02**: User sees a heap panel showing simulated malloc/free blocks with addresses
 - [ ] **VIZ-03**: User sees SVG pointer arrows connecting pointer variables to their target memory locations
 - [ ] **VIZ-04**: User sees a registers/program state panel showing PC and SP
@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXEC-05 | Phase 2 | Complete |
 | EXEC-06 | Phase 2 | Complete |
 | EXEC-07 | Phase 2 | Complete |
-| VIZ-01 | Phase 3 | Pending |
+| VIZ-01 | Phase 3 | Complete |
 | VIZ-02 | Phase 3 | Complete |
 | VIZ-03 | Phase 3 | Pending |
 | VIZ-04 | Phase 3 | Pending |
