@@ -14,7 +14,7 @@ export class HeapPanel {
     this.container = d3.select(container);
   }
 
-  render(blocks: HeapBlock[]): void {
+  render(blocks: HeapBlock[], prevBlocks: HeapBlock[] = []): void {
     // Full clear before re-render — prevents element accumulation (Pitfall 3 / UI-03)
     this.container.selectAll('*').remove();
 
@@ -28,16 +28,31 @@ export class HeapPanel {
       return;
     }
 
+    // Build set of addresses whose status changed between steps
+    const changedAddrs = new Set<number>();
+    for (const block of blocks) {
+      const prev = prevBlocks.find(p => p.address === block.address);
+      if (prev && prev.status !== block.status) changedAddrs.add(block.address);
+    }
+
     blocks.forEach((block) => {
+      const isLeaked = block.status === 'leaked';
+      const isChanged = changedAddrs.has(block.address);
+
       const blockDiv = this.container
         .append('div')
         .attr('class', 'heap-block')
+        .attr('data-address', String(block.address))
         .style('border-left', '3px solid var(--color-heap-border)')
         .style('margin', '6px')
         .style('padding', '8px')
-        .style('background', 'var(--color-bg-panel)');
+        .style('background', isLeaked ? 'rgba(212, 172, 13, 0.15)' : 'var(--color-bg-panel)');
 
-      // Address line: hex address + optional label
+      if (isChanged) {
+        blockDiv.attr('data-changed', 'true');
+      }
+
+      // Address line: hex address + optional label + LEAK badge
       const headerRow = blockDiv
         .append('div')
         .attr('class', 'heap-block-header')
@@ -58,6 +73,20 @@ export class HeapPanel {
           .attr('class', 'heap-block-label')
           .style('color', 'var(--color-text-secondary)')
           .text(block.label);
+      }
+
+      if (isLeaked) {
+        headerRow
+          .append('span')
+          .attr('class', 'heap-leaked-badge')
+          .style('background', '#d4ac0d')
+          .style('color', '#fff')
+          .style('font-size', '11px')
+          .style('font-weight', '700')
+          .style('padding', '1px 6px')
+          .style('border-radius', '10px')
+          .style('text-transform', 'uppercase')
+          .text('LEAK');
       }
 
       // Size + status row
