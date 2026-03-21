@@ -23,6 +23,9 @@
   --color-heap-allocated: #17a589;
   --color-heap-freed: #c0392b;
   --color-heap-leaked: #d4ac0d;
+
+  /* Step diff highlighting */
+  --color-diff-highlight: rgba(255, 200, 0, 0.35);
 }
 
 * {
@@ -132,7 +135,7 @@ body {
   background: #d0d0d0;
   color: var(--color-text-primary);
   border: 1px solid #bbb;
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-family: inherit;
   font-size: 12px;
   cursor: pointer;

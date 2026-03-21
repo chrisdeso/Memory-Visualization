@@ -52,4 +52,8 @@ export class ExecutionState {
   get currentIndex(): number {
     return this.index;
   }
+
+  get previousSnapshot(): ExecutionSnapshot | null {
+    return this.trace[this.index - 1] ?? null;
+  }
 }
