@@ -3,6 +3,7 @@ import { ExecutionState } from './state/ExecutionState';
 import { StackPanel } from './viz/StackPanel';
 import { HeapPanel } from './viz/HeapPanel';
 import { RegistersPanel } from './viz/RegistersPanel';
+import { PointerArrowOverlay } from './viz/PointerArrowOverlay';
 import { SyntaxReference } from './components/SyntaxReference';
 import { AutoPlayController } from './interpreter/AutoPlayController';
 import type { WorkerResult } from './interpreter/types';
@@ -15,6 +16,7 @@ export class App {
   private stackPanel: StackPanel;
   private heapPanel: HeapPanel;
   private registersPanel: RegistersPanel;
+  private overlay: PointerArrowOverlay;
   private syntaxRef: SyntaxReference;
   private autoPlay: AutoPlayController;
 
@@ -85,20 +87,34 @@ int main() {
     this.syntaxRef = new SyntaxReference(syntaxRefContainer);
     this.autoPlay = new AutoPlayController(this.state, () => this.updatePlayButton());
 
+    // Create SVG pointer arrow overlay over the viz-pane
+    const vizPane = root.querySelector('.viz-pane') as HTMLElement;
+    this.overlay = new PointerArrowOverlay(vizPane);
+
+    // Wire scroll listeners so arrows re-render when panels scroll
+    const stackPanel = root.querySelector('#stack-panel') as HTMLElement;
+    const heapPanel = root.querySelector('#heap-panel') as HTMLElement;
+    this.overlay.addScrollListener(stackPanel, () => this.state.current?.pointers ?? []);
+    this.overlay.addScrollListener(heapPanel, () => this.state.current?.pointers ?? []);
+
     // Wire state changes to panels and editor
     this.state.onChange((snapshot) => {
+      const prev = this.state.previousSnapshot;
       if (snapshot) {
-        this.stackPanel.render(snapshot.stack);
-        this.heapPanel.render(snapshot.heap);
+        this.stackPanel.render(snapshot.stack, prev?.stack ?? []);
+        this.heapPanel.render(snapshot.heap, prev?.heap ?? []);
         this.registersPanel.render(snapshot.registers);
         this.editor.highlightLine(snapshot.lineNumber);
         this.updateStepDisplay();
+        // Render overlay AFTER panels so DOM data-address attrs are settled
+        this.overlay.render(snapshot.pointers);
       } else {
         this.stackPanel.render([]);
         this.heapPanel.render([]);
         this.registersPanel.render(null);
         this.editor.clearHighlight();
         this.updateStepDisplay();
+        this.overlay.render([]);
       }
     });
 

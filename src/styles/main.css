@@ -65,6 +65,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   border-left: 1px solid #d0d0d0;
+  position: relative;
 }
 
 .toolbar {
