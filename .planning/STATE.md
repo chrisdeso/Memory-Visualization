@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-06-PLAN.md — Phase 2 complete
-last_updated: "2026-03-20T19:57:01.275Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-21T19:23:50.371Z"
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 14
+  completed_plans: 13
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users write C code, step through it, and see exactly what's happening in memory — stack, heap, and pointers — without needing any server or build step.
-**Current focus:** Phase 02 — interpreter
+**Current focus:** Phase 03 — pointer-visualization
 
 ## Current Position
 
-Phase: 02 (interpreter) — EXECUTING
-Plan: 4 of 6
+Phase: 03 (pointer-visualization) — EXECUTING
+Plan: 1 of 3
 
 ## Performance Metrics
 
@@ -54,6 +54,8 @@ Plan: 4 of 6
 | Phase 02-interpreter P05 | 8 | 2 tasks | 8 files |
 | Phase 02-interpreter P06 | 3 | 2 tasks | 5 files |
 | Phase 02-interpreter P06 | 25 | 3 tasks | 7 files |
+| Phase 03-pointer-visualization P02 | 5 | 1 tasks | 2 files |
+| Phase 03-pointer-visualization P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -93,6 +95,10 @@ Recent decisions affecting current work:
 - [Phase 02-interpreter]: SyntaxReference placed in viz-pane below registers as collapsible panel — no fixed vertical space cost, keeps C++ reference near visualization context
 - [Phase 02-interpreter]: Memory.store/load guard with isValidAddress to throw segfault errors rather than silent corruption
 - [Phase 02-interpreter]: Class stack vars use computed member field sizes instead of fixed 4 bytes
+- [Phase 03-pointer-visualization]: data-address stored as decimal String(block.address) for consistent querySelector compatibility across StackPanel and HeapPanel
+- [Phase 03-pointer-visualization]: render() prevBlocks parameter defaults to [] for backward compatibility — no App.ts callers need updating
+- [Phase 03-pointer-visualization]: render() second parameter prevFrames defaults to [] — backward compatible; changedAddrs keyed by address for stable unique identification across steps
+- [Phase 03-pointer-visualization]: data-address attributes on .stack-local-row enable Plan 03-03 SVG arrows to anchor to DOM without coordinate queries
 
 ### Pending Todos
 
@@ -105,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T19:51:51.472Z
-Stopped at: Completed 02-06-PLAN.md — Phase 2 complete
+Last session: 2026-03-21T19:23:37.219Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
