@@ -8,7 +8,7 @@ export class StackPanel {
     this.container = d3.select(container);
   }
 
-  render(frames: StackFrame[]): void {
+  render(frames: StackFrame[], prevFrames: StackFrame[] = []): void {
     // Full clear before re-render — prevents element accumulation (Pitfall 3 / UI-03)
     this.container.selectAll('*').remove();
 
@@ -22,6 +22,16 @@ export class StackPanel {
       return;
     }
 
+    // Build set of changed addresses by comparing current vs previous locals
+    const changedAddrs = new Set<number>();
+    const prevLocals = prevFrames.flatMap(f => f.locals);
+    for (const frame of frames) {
+      for (const v of frame.locals) {
+        const prev = prevLocals.find(p => p.address === v.address);
+        if (prev && prev.value !== v.value) changedAddrs.add(v.address);
+      }
+    }
+
     // Render frames in reverse order (most recent at top = top of stack)
     const reversed = [...frames].reverse();
 
@@ -29,28 +39,64 @@ export class StackPanel {
       const frameDiv = this.container
         .append('div')
         .attr('class', 'stack-frame')
+        .style('border-top', '1px solid #d0d0d0')
         .style('border-left', '3px solid var(--color-stack-border)')
         .style('margin', '6px')
         .style('padding', '8px')
         .style('background', 'var(--color-bg-panel)');
 
-      // Frame header: name bold
+      // Frame name label: uppercase, bold, stack-border color per UI-SPEC
       frameDiv
         .append('div')
         .attr('class', 'stack-frame-name')
-        .style('font-weight', 'bold')
-        .style('color', 'var(--color-text-primary)')
+        .style('font-size', '11px')
+        .style('font-weight', '700')
+        .style('color', 'var(--color-stack-border)')
+        .style('text-transform', 'uppercase')
+        .style('letter-spacing', '0.06em')
         .style('margin-bottom', '4px')
         .text(frame.name + '()');
+
+      // Return address row
+      const returnAddrRow = frameDiv
+        .append('div')
+        .attr('class', 'stack-return-addr')
+        .style('display', 'flex')
+        .style('font-size', '11px')
+        .style('margin-bottom', '4px');
+
+      returnAddrRow
+        .append('span')
+        .style('color', 'var(--color-text-muted)')
+        .style('font-weight', '400')
+        .style('margin-right', '4px')
+        .text('return addr:');
+
+      const returnAddrValue = frame.returnAddr === 0
+        ? '\u2014'
+        : '0x' + frame.returnAddr.toString(16);
+
+      returnAddrRow
+        .append('span')
+        .style('color', 'var(--color-address)')
+        .style('font-family', 'monospace')
+        .text(returnAddrValue);
 
       // Each local variable: type name = value   0x<address>
       frame.locals.forEach((v) => {
         const row = frameDiv
           .append('div')
           .attr('class', 'stack-local-row')
+          .attr('data-address', String(v.address))
           .style('display', 'flex')
           .style('justify-content', 'space-between')
           .style('font-size', '0.875em');
+
+        if (changedAddrs.has(v.address)) {
+          row
+            .attr('data-changed', 'true')
+            .style('background', 'var(--color-diff-highlight)');
+        }
 
         row
           .append('span')

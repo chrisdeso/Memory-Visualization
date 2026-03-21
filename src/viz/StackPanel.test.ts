@@ -77,7 +77,8 @@ describe('StackPanel', () => {
     expect(frameDivs.length).toBeGreaterThan(0);
     frameDivs.forEach((div) => {
       const style = (div as HTMLElement).style.borderTop;
-      expect(style).toBe('1px solid #d0d0d0');
+      // jsdom normalizes hex colors to rgb(), accept either form
+      expect(style).toMatch(/1px solid (#d0d0d0|rgb\(208, 208, 208\))/);
     });
   });
 
