@@ -69,14 +69,12 @@ Plans:
   3. User sees SVG Bezier-curve arrows connecting pointer variables to their target memory addresses across panels
   4. User sees the program counter and stack pointer in a registers panel
   5. User sees heap blocks that were never freed highlighted as memory leaks when the program exits
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Stack panel refinement (frame boundaries, activation record layout, return address fields)
-- [ ] 03-02: Heap panel refinement (allocated/freed/leaked block status, simulated hex addresses)
-- [ ] 03-03: SVG pointer arrow overlay (address-to-DOMRect resolution, Bezier curves, re-render on step)
-- [ ] 03-04: Registers panel (PC, SP display from ExecutionSnapshot)
-- [ ] 03-05: Memory leak highlighting and step diff indicators (changed values highlighted between steps)
+- [ ] 03-01-PLAN.md — Stack panel refinement (frame boundaries, return address rows, data-address attrs, step-diff highlighting)
+- [ ] 03-02-PLAN.md — Heap panel refinement (LEAK badge, data-address attrs, diff highlighting)
+- [ ] 03-03-PLAN.md — SVG pointer arrow overlay, App.ts wiring (diff params, scroll listeners), RegistersPanel verification
 
 ### Phase 4: Polish
 **Goal**: The app is portfolio-ready: a first-time visitor can select a curated example, step through it, and understand C memory concepts without any guidance, and the overall visual design reflects the quality of a professional dev tool
@@ -100,5 +98,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-19 |
 | 2. Interpreter | 6/6 | Complete   | 2026-03-20 |
-| 3. Pointer Visualization | 0/5 | Not started | - |
+| 3. Pointer Visualization | 0/3 | Not started | - |
 | 4. Polish | 0/2 | Not started | - |
