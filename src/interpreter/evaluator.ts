@@ -698,6 +698,8 @@ function evalExpr(node: ASTNode, ctx: EvalContext): unknown {
       return 0;
     case 'Identifier': {
       const id = node as IdentifierNode;
+      // NULL / nullptr — C/C++ null pointer constants
+      if (id.name === 'NULL' || id.name === 'nullptr') return 0;
       // std::cout, std::cerr, std::endl etc. are stream objects — treat as no-op sentinel
       if (id.name === 'std::cout' || id.name === 'std::cerr' || id.name === 'std::cin' || id.name === 'std::endl') {
         return 0;

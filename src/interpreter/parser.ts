@@ -138,6 +138,14 @@ function parseType(): TypeNode {
       throw new Error(`Parse error at line ${name.line}: Expected type name after 'std::'`);
     }
     base = name.value;
+  } else if (check(TokenType.Struct) || check(TokenType.Class)) {
+    // struct Foo or class Foo used as a type name (e.g. struct Node *next)
+    advance(); // consume 'struct' / 'class'
+    const name = advance();
+    if (name.type !== TokenType.Identifier) {
+      throw new Error(`Parse error at line ${name.line}: Expected type name after 'struct'/'class'`);
+    }
+    base = name.value;
   } else if (TYPE_KEYWORDS.has(peek().type) && peek().type !== TokenType.Const) {
     base = advance().value;
   } else if (check(TokenType.Identifier)) {
