@@ -242,6 +242,7 @@ export type NewExpr = {
   kind: 'NewExpr';
   typeName: string;
   args: ASTNode[];
+  isArray?: boolean;
   line: number;
 };
 

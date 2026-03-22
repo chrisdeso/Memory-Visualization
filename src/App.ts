@@ -3,9 +3,9 @@ import { ExecutionState } from './state/ExecutionState';
 import { StackPanel } from './viz/StackPanel';
 import { HeapPanel } from './viz/HeapPanel';
 import { RegistersPanel } from './viz/RegistersPanel';
-import { PointerArrowOverlay } from './viz/PointerArrowOverlay';
 import { SyntaxReference } from './components/SyntaxReference';
 import { AutoPlayController } from './interpreter/AutoPlayController';
+import { EXAMPLES } from './examples/index';
 import type { WorkerResult } from './interpreter/types';
 
 const WORKER_TIMEOUT_MS = 5000;
@@ -16,27 +16,35 @@ export class App {
   private stackPanel: StackPanel;
   private heapPanel: HeapPanel;
   private registersPanel: RegistersPanel;
-  private overlay: PointerArrowOverlay;
   private syntaxRef: SyntaxReference;
   private autoPlay: AutoPlayController;
 
   constructor(root: HTMLElement) {
     // Build DOM structure
+    const exampleOptions = EXAMPLES.map(
+      (ex, i) => `<option value="${i}">${ex.name}</option>`
+    ).join('');
+
     root.innerHTML = `
       <div class="toolbar">
         <span class="toolbar-title">Memory Visualizer</span>
+        <div class="toolbar-divider"></div>
         <div class="step-controls">
-          <button id="btn-run" title="Run program">Run &#9654;</button>
+          <select id="example-select" title="Load example">
+            <option value="">Examples…</option>
+            ${exampleOptions}
+          </select>
+          <button id="btn-run" title="Run (Ctrl+S)">Run &#9654;</button>
           <button id="btn-play" title="Auto-play">&#9654;&#9654; Play</button>
           <select id="speed-select" title="Playback speed">
             <option value="slow">Slow</option>
             <option value="medium" selected>Medium</option>
             <option value="fast">Fast</option>
           </select>
+          <button id="btn-back" title="Step Back">&larr;</button>
+          <button id="btn-forward" title="Step Forward">&rarr;</button>
           <button id="btn-reset" title="Reset">Reset</button>
-          <button id="btn-back" title="Step Back">&larr; Back</button>
-          <button id="btn-forward" title="Step Forward">Forward &rarr;</button>
-          <span id="step-display" class="step-display">Step 0/0</span>
+          <span id="step-display" class="step-display">Step 0 / 0</span>
         </div>
       </div>
       <div class="main-layout">
@@ -67,19 +75,7 @@ export class App {
     const registersContent = root.querySelector('#registers-content') as HTMLElement;
     const syntaxRefContainer = root.querySelector('#syntax-ref') as HTMLElement;
 
-    // Sample C code for the editor
-    const sampleCode = `#include <iostream>
-
-int main() {
-    int x = 42;
-    int y = x + 8;
-    int *p = (int*)malloc(sizeof(int));
-    *p = 100;
-    free(p);
-    return 0;
-}`;
-
-    this.editor = new EditorPanel(editorContainer, sampleCode);
+    this.editor = new EditorPanel(editorContainer, EXAMPLES[0]?.code ?? '');
     this.state = new ExecutionState();
     this.stackPanel = new StackPanel(stackContent);
     this.heapPanel = new HeapPanel(heapContent);
@@ -87,34 +83,21 @@ int main() {
     this.syntaxRef = new SyntaxReference(syntaxRefContainer);
     this.autoPlay = new AutoPlayController(this.state, () => this.updatePlayButton());
 
-    // Create SVG pointer arrow overlay over the viz-pane
-    const vizPane = root.querySelector('.viz-pane') as HTMLElement;
-    this.overlay = new PointerArrowOverlay(vizPane);
-
-    // Wire scroll listeners so arrows re-render when panels scroll
-    const stackPanel = root.querySelector('#stack-panel') as HTMLElement;
-    const heapPanel = root.querySelector('#heap-panel') as HTMLElement;
-    this.overlay.addScrollListener(stackPanel, () => this.state.current?.pointers ?? []);
-    this.overlay.addScrollListener(heapPanel, () => this.state.current?.pointers ?? []);
-
     // Wire state changes to panels and editor
     this.state.onChange((snapshot) => {
       const prev = this.state.previousSnapshot;
       if (snapshot) {
-        this.stackPanel.render(snapshot.stack, prev?.stack ?? []);
+        this.stackPanel.render(snapshot.stack, prev?.stack ?? [], snapshot.pointers);
         this.heapPanel.render(snapshot.heap, prev?.heap ?? []);
         this.registersPanel.render(snapshot.registers);
         this.editor.highlightLine(snapshot.lineNumber);
         this.updateStepDisplay();
-        // Render overlay AFTER panels so DOM data-address attrs are settled
-        this.overlay.render(snapshot.pointers);
       } else {
         this.stackPanel.render([]);
         this.heapPanel.render([]);
         this.registersPanel.render(null);
         this.editor.clearHighlight();
         this.updateStepDisplay();
-        this.overlay.render([]);
       }
     });
 
@@ -145,6 +128,19 @@ int main() {
     const speedSelect = root.querySelector('#speed-select') as HTMLSelectElement | null;
     speedSelect?.addEventListener('change', () => {
       this.autoPlay.currentSpeed = speedSelect.value as 'slow' | 'medium' | 'fast';
+    });
+
+    const exampleSelect = root.querySelector('#example-select') as HTMLSelectElement | null;
+    exampleSelect?.addEventListener('change', () => {
+      const idx = parseInt(exampleSelect.value, 10);
+      if (!isNaN(idx) && EXAMPLES[idx]) {
+        this.autoPlay.stopPlay();
+        this.state.reset();
+        this.editor.clearErrors();
+        this.hideErrorBanner();
+        this.editor.setValue(EXAMPLES[idx].code);
+        exampleSelect.value = '';
+      }
     });
   }
 
@@ -234,9 +230,9 @@ int main() {
     const display = document.getElementById('step-display');
     if (display) {
       if (this.state.stepCount === 0) {
-        display.textContent = 'Step 0/0';
+        display.textContent = 'Step 0 / 0';
       } else {
-        display.textContent = `Step ${this.state.currentIndex + 1}/${this.state.stepCount}`;
+        display.textContent = `Step ${this.state.currentIndex + 1} / ${this.state.stepCount}`;
       }
     }
   }

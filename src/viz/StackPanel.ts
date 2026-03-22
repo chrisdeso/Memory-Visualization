@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { StackFrame } from '../types/snapshot';
+import type { StackFrame, PointerLink } from '../types/snapshot';
 
 export class StackPanel {
   private container: d3.Selection<HTMLElement, unknown, null, undefined>;
@@ -8,7 +8,7 @@ export class StackPanel {
     this.container = d3.select(container);
   }
 
-  render(frames: StackFrame[], prevFrames: StackFrame[] = []): void {
+  render(frames: StackFrame[], prevFrames: StackFrame[] = [], pointers: PointerLink[] = []): void {
     // Full clear before re-render — prevents element accumulation (Pitfall 3 / UI-03)
     this.container.selectAll('*').remove();
 
@@ -21,6 +21,9 @@ export class StackPanel {
         .text('Step through to see stack frames');
       return;
     }
+
+    // Build set of addresses that are pointer variables (point into heap)
+    const pointerVarAddrs = new Set(pointers.map(p => p.varAddress));
 
     // Build set of changed addresses by comparing current vs previous locals
     const changedAddrs = new Set<number>();
@@ -109,6 +112,20 @@ export class StackPanel {
           .attr('class', 'stack-local-addr')
           .style('color', 'var(--color-address)')
           .text(`0x${v.address.toString(16)}`);
+
+        if (pointerVarAddrs.has(v.address)) {
+          row.attr('data-pointer', 'true');
+          row
+            .append('span')
+            .attr('class', 'stack-pointer-badge')
+            .style('background', 'var(--color-heap-border)')
+            .style('color', '#fff')
+            .style('font-size', '11px')
+            .style('font-weight', '700')
+            .style('padding', '1px 6px')
+            .style('border-radius', '10px')
+            .text('PTR');
+        }
       });
     });
   }

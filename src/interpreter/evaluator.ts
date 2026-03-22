@@ -698,6 +698,10 @@ function evalExpr(node: ASTNode, ctx: EvalContext): unknown {
       return 0;
     case 'Identifier': {
       const id = node as IdentifierNode;
+      // std::cout, std::cerr, std::endl etc. are stream objects — treat as no-op sentinel
+      if (id.name === 'std::cout' || id.name === 'std::cerr' || id.name === 'std::cin' || id.name === 'std::endl') {
+        return 0;
+      }
       const addr = ctx.env.get(id.name);
       if (addr === undefined) {
         throw runtimeError(`Undefined variable: ${id.name}`, ctx);
@@ -782,6 +786,8 @@ function evalBinaryExpr(node: BinaryExpr, ctx: EvalContext): unknown {
     case '>=': return l >= r ? 1 : 0;
     case '&&': return (isTruthy(left) && isTruthy(right)) ? 1 : 0;
     case '||': return (isTruthy(left) || isTruthy(right)) ? 1 : 0;
+    case '<<': return left; // stream insertion (std::cout << x) — no-op, return lhs
+    case '>>': return left; // stream extraction (std::cin >> x) — no-op
     default: return 0;
   }
 }
@@ -988,8 +994,13 @@ function evalNewExpr(node: NewExpr, ctx: EvalContext): unknown {
   const sizes: Record<string, number> = {
     int: 4, float: 4, double: 8, char: 1, bool: 1,
   };
-  const size = sizes[typeName] ?? 4;
-  return ctx.memory.allocHeap(size, `new ${typeName}`);
+  const elemSize = sizes[typeName] ?? 4;
+  if (node.isArray) {
+    // Array new: args[0] is the count
+    const count = node.args.length === 1 ? Math.max(1, toNumber(evalExpr(node.args[0]!, ctx))) : 1;
+    return ctx.memory.allocHeap(elemSize * count, `new ${typeName}[${count}]`);
+  }
+  return ctx.memory.allocHeap(elemSize, `new ${typeName}`);
 }
 
 function evalDeleteExpr(node: DeleteExpr, ctx: EvalContext): void {

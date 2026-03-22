@@ -34,3 +34,5 @@ tmp/
 
 # Custom
 .planning/
+.claude/
+docs/

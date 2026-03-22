@@ -252,7 +252,11 @@ function isVarDeclStart(): boolean {
   const t = peek();
   if (t.type === TokenType.Const) return true;
   if (TYPE_KEYWORDS.has(t.type)) return true;
-  if (t.type === TokenType.Std && peek(1).type === TokenType.ColonColon) return true;
+  if (t.type === TokenType.Std && peek(1).type === TokenType.ColonColon) {
+    // std::name followed by << (two Less tokens) is a stream expression, not a var decl
+    if (peek(3).type === TokenType.Less && peek(4).type === TokenType.Less) return false;
+    return true;
+  }
   // User-defined type: identifier followed by another identifier (or * ident or & ident)
   if (t.type === TokenType.Identifier) {
     const next = peek(1);
@@ -477,17 +481,34 @@ function parseEquality(): ASTNode {
   return left;
 }
 
-function parseComparison(): ASTNode {
+function parseShift(): ASTNode {
   let left = parseAdditive();
+  // Handle << (two consecutive Less tokens) and >> (two consecutive Greater tokens)
   while (
-    check(TokenType.Less) ||
-    check(TokenType.Greater) ||
+    (check(TokenType.Less) && peek(1).type === TokenType.Less) ||
+    (check(TokenType.Greater) && peek(1).type === TokenType.Greater)
+  ) {
+    const line = peek().line;
+    const op = peek().type === TokenType.Less ? '<<' : '>>';
+    advance(); // first < or >
+    advance(); // second < or >
+    const right = parseAdditive();
+    left = { kind: 'BinaryExpr', op, left, right, line } as BinaryExpr;
+  }
+  return left;
+}
+
+function parseComparison(): ASTNode {
+  let left = parseShift();
+  while (
+    (check(TokenType.Less) && peek(1).type !== TokenType.Less) ||
+    (check(TokenType.Greater) && peek(1).type !== TokenType.Greater) ||
     check(TokenType.LessEqual) ||
     check(TokenType.GreaterEqual)
   ) {
     const line = peek().line;
     const op = advance().value;
-    const right = parseAdditive();
+    const right = parseShift();
     left = { kind: 'BinaryExpr', op, left, right, line } as BinaryExpr;
   }
   return left;
@@ -773,12 +794,21 @@ function parseNew(): NewExpr {
     typeName = expect(TokenType.Identifier, "Expected type name after 'new'").value;
   }
 
-  // Array new: new Type[size]
+  // Array new: new Type[size] or new Type[size]{initializer list}
   if (check(TokenType.LBracket)) {
     advance(); // [
     const sizeExpr = parseExpression();
     expect(TokenType.RBracket, "Expected ']'");
-    return { kind: 'NewExpr', typeName, args: [sizeExpr], line };
+    // Consume optional brace initializer: new int[3]{1, 2, 3}
+    if (check(TokenType.LBrace)) {
+      advance(); // {
+      while (!check(TokenType.RBrace) && !check(TokenType.EOF)) {
+        parseExpression();
+        if (!match(TokenType.Comma)) break;
+      }
+      expect(TokenType.RBrace, "Expected '}' after array initializer");
+    }
+    return { kind: 'NewExpr', typeName, args: [sizeExpr], isArray: true, line };
   }
 
   // Constructor call: new Type(args)

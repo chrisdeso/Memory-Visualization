@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { StackPanel } from './StackPanel';
-import type { StackFrame } from '../types/snapshot';
+import type { StackFrame, PointerLink } from '../types/snapshot';
 
 // Use jsdom for DOM operations
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
@@ -98,7 +98,7 @@ describe('StackPanel', () => {
     panel.render(sampleFrames);
     const returnAddrRows = container.querySelectorAll('.stack-return-addr');
     // helper frame (returnAddr: 0x7fff0100) should show hex
-    const helperReturnRow = returnAddrRows[0]; // helper is reversed to top
+    const helperReturnRow = returnAddrRows[0]!; // helper is reversed to top
     expect(helperReturnRow.textContent).toContain('0x7fff0100');
   });
 
@@ -106,7 +106,7 @@ describe('StackPanel', () => {
     panel.render(sampleFrames);
     const returnAddrRows = container.querySelectorAll('.stack-return-addr');
     // main frame (returnAddr: 0) should show dash (em dash)
-    const mainReturnRow = returnAddrRows[1]; // main is at bottom (last in reversed)
+    const mainReturnRow = returnAddrRows[1]!; // main is at bottom (last in reversed)
     expect(mainReturnRow.textContent).toContain('\u2014');
   });
 
@@ -155,5 +155,28 @@ describe('StackPanel', () => {
     panel.render(sampleFrames, []);
     const changedRows = container.querySelectorAll('[data-changed="true"]');
     expect(changedRows.length).toBe(0);
+  });
+
+  it('Test 13: pointer locals get data-pointer="true" and a PTR badge', () => {
+    const pointers: PointerLink[] = [
+      { varAddress: 0x7fff0008, pointsToAddress: 0x20000000 }, // p is a pointer
+    ];
+    panel.render(sampleFrames, [], pointers);
+
+    const pRow = container.querySelector('[data-address="' + String(0x7fff0008) + '"]');
+    expect(pRow).not.toBeNull();
+    expect(pRow!.getAttribute('data-pointer')).toBe('true');
+    expect(pRow!.querySelector('.stack-pointer-badge')?.textContent).toBe('PTR');
+
+    // Non-pointer row should not have the badge
+    const xRow = container.querySelector('[data-address="' + String(0x7fff0010) + '"]');
+    expect(xRow!.getAttribute('data-pointer')).toBeNull();
+    expect(xRow!.querySelector('.stack-pointer-badge')).toBeNull();
+  });
+
+  it('Test 14: render with no pointers does not add any PTR badges', () => {
+    panel.render(sampleFrames);
+    const badges = container.querySelectorAll('.stack-pointer-badge');
+    expect(badges.length).toBe(0);
   });
 });
