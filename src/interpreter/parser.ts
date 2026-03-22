@@ -104,6 +104,8 @@ function isTypeToken(): boolean {
   const t = peek();
   // type keywords
   if (TYPE_KEYWORDS.has(t.type)) return true;
+  // struct/class used as type prefix (e.g. struct Node *next)
+  if (t.type === TokenType.Struct || t.type === TokenType.Class) return true;
   // std::... types
   if (t.type === TokenType.Std && peek(1).type === TokenType.ColonColon) return true;
   // Identifier followed by * or & or identifier could be a user-defined type
@@ -260,6 +262,8 @@ function isVarDeclStart(): boolean {
   const t = peek();
   if (t.type === TokenType.Const) return true;
   if (TYPE_KEYWORDS.has(t.type)) return true;
+  // struct/class used as type prefix
+  if (t.type === TokenType.Struct || t.type === TokenType.Class) return true;
   if (t.type === TokenType.Std && peek(1).type === TokenType.ColonColon) {
     // std::name followed by << (two Less tokens) is a stream expression, not a var decl
     if (peek(3).type === TokenType.Less && peek(4).type === TokenType.Less) return false;
