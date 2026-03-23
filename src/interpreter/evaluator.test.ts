@@ -1,6 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import { interpret } from './evaluator';
 
+describe('Evaluator - Struct with self-referential pointer field', () => {
+  it('parses and runs struct with struct TypeName* field and NULL', () => {
+    const code = `#include <stdlib.h>
+struct Node {
+    int value;
+    struct Node *next;
+};
+int main() {
+    struct Node *head = (struct Node*)malloc(sizeof(struct Node));
+    head->value = 1;
+    head->next = NULL;
+    free(head);
+    return 0;
+}`;
+    expect(() => interpret(code)).not.toThrow();
+    const trace = interpret(code);
+    expect(trace.length).toBeGreaterThan(0);
+  });
+});
+
 describe('Evaluator - Basic Execution', () => {
   it('int main() with variable returns non-empty trace', () => {
     const trace = interpret('int main() { int x = 42; return 0; }');

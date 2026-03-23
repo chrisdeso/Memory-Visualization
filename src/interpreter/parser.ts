@@ -620,6 +620,7 @@ function isTypeTokenAt(idx: number): boolean {
   if (!t) return false;
   if (TYPE_KEYWORDS.has(t.type)) return true;
   if (t.type === TokenType.Std) return true;
+  if (t.type === TokenType.Struct || t.type === TokenType.Class) return true;
   if (t.type === TokenType.Identifier) {
     // Followed by ) or * or &
     const next = tokens[idx + 1];
@@ -636,6 +637,10 @@ function isCastLookAhead(): boolean {
 
   // (const ...) or (int) or (void*) etc.
   if (t && t.type === TokenType.Const) i++;
+
+  // struct/class TypeName prefix — e.g. (struct Node*)
+  if (tokens[i]?.type === TokenType.Struct || tokens[i]?.type === TokenType.Class) i++;
+
   const t2 = tokens[i];
   if (t2 !== undefined && TYPE_KEYWORDS.has(t2.type) && t2.type !== TokenType.Const) {
     // Skip type

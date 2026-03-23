@@ -940,7 +940,15 @@ function evalCallExpr(node: CallExpr, ctx: EvalContext): unknown {
 
 function evalCastExpr(node: CastExpr, ctx: EvalContext): unknown {
   const val = evalExpr(node.expr, ctx);
-  // For numeric types and pointer types, just return value
+  // When casting a heap address to a known struct/class pointer type,
+  // register a ClassInstance so that -> member access works afterward.
+  if (node.targetType.isPointer && ctx.classes.has(node.targetType.base)) {
+    const addr = toNumber(val);
+    if (addr !== 0 && !ctx.classInstances.has(addr)) {
+      const classDecl = ctx.classes.get(node.targetType.base)!;
+      allocClassInstance(classDecl, addr, true, ctx);
+    }
+  }
   return val;
 }
 
