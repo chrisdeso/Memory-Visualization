@@ -107,6 +107,17 @@ function typeSizeOf(typeNode: TypeNode): number {
   return sizes[typeNode.base] ?? 4;
 }
 
+function classSize(classDecl: ClassDecl): number {
+  let total = 0;
+  for (const member of classDecl.members) {
+    if (member.decl.kind === 'VarDecl') {
+      const field = member.decl as VarDecl;
+      total += Math.max(typeSizeOf(field.varType), 4);
+    }
+  }
+  return Math.max(total, 4);
+}
+
 function typeNodeToString(typeNode: TypeNode): string {
   let base = typeNode.base;
   if (typeNode.isPointer) base += '*';
@@ -964,6 +975,9 @@ function evalSizeofExpr(node: SizeofExpr, ctx: EvalContext): unknown {
   } else {
     // It's a TypeNode
     const typeNode = node.operand as TypeNode;
+    if (!typeNode.isPointer && !typeNode.isReference && ctx.classes.has(typeNode.base)) {
+      return classSize(ctx.classes.get(typeNode.base)!);
+    }
     return typeSizeOf(typeNode);
   }
 }
