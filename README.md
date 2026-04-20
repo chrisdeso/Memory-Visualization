@@ -1,7 +1,7 @@
 # C Memory Visualizer
 ## CS3339 (Computer Architecture) at Texas State University - Spring 2025
 
-![image](https://github.com/user-attachments/assets/22e8cc7c-b65f-438d-bd05-7a08013ec1ee)
+![screensh(/home/chitao/dev/Memory-Visualization/src/misc/memviz.png)
 
 ## Table of Contents
 1. [Project description](#project-description)
@@ -16,9 +16,11 @@
 
 A browser-based tool that lets you write C/C++ code and watch stack frames, heap allocations, and pointer relationships update in real time, step by step.
 
+#### Demo [HERE](https://chrisdeso.com/Memory-Visualization/)
+
 ## Team members
 Our team is composed of (in alphabetical order):
-- Christopher de Souza
+- Christopher de Sousa
 - Isabella Liduario Buzelin Godinho
 - Kendal Anderson
 - Maryam Bouamama
