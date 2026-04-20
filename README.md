@@ -1,7 +1,7 @@
 # C Memory Visualizer
 ## CS3339 (Computer Architecture) at Texas State University - Spring 2025
 
-![screenshot](/Memory-Visualization/src/misc/memviz.png)
+![screenshot](src/misc/memViz.png)
 
 ## Table of Contents
 1. [Project description](#project-description)
